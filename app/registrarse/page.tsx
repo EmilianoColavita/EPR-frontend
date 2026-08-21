@@ -1,12 +1,12 @@
 import { Header } from "@/components/layout/header";
-import { LoginForm } from "@/components/sections/login-form";
+import { RegisterForm } from "@/components/sections/register-form";
 
-export default function LoginPage() {
+export default function RegistrarsePage() {
   return (
     <>
       <Header />
       <main className="flex-1">
-        <LoginForm />
+        <RegisterForm />
       </main>
     </>
   );

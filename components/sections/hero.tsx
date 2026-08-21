@@ -51,16 +51,30 @@ const fadeUp: Variants = {
 
 export function Hero() {
   return (
-    <section
-      className="relative flex min-h-[calc(100vh-7rem)] items-center overflow-hidden bg-epr-dark"
-      style={{
-        backgroundImage:
-          "linear-gradient(90deg, rgba(18,18,18,0.96) 0%, rgba(18,18,18,0.75) 45%, rgba(18,18,18,0.55) 100%), radial-gradient(circle at 75% 30%, rgba(60,60,60,0.4), transparent 60%), url('/images/fondoEPR5.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-10">
+    <section className="relative flex min-h-[calc(100vh-7rem)] items-center overflow-hidden bg-epr-dark">
+      <video
+        className="absolute inset-0 h-full w-full object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        poster="/images/fondoEPR5.png"
+        aria-hidden="true"
+      >
+        <source src="/videos/hero-bg.webm" type="video/webm" />
+        <source src="/videos/hero-bg.mp4" type="video/mp4" />
+      </video>
+
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(90deg, rgba(18,18,18,0.96) 0%, rgba(18,18,18,0.75) 45%, rgba(18,18,18,0.55) 100%), radial-gradient(circle at 75% 30%, rgba(60,60,60,0.4), transparent 60%)",
+        }}
+      />
+
+      <div className="relative mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-10">
         <motion.div
           className="max-w-3xl"
           variants={containerVariants}
