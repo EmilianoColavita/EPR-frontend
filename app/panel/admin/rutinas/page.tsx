@@ -1,10 +1,10 @@
 import { AdminShell } from "@/components/admin/admin-shell";
-import { AdminComingSoon } from "@/components/admin/admin-coming-soon";
+import { RutinasPage } from "@/components/admin/rutinas-page";
 
 export default function AdminRutinasPage() {
   return (
     <AdminShell>
-      <AdminComingSoon title="Rutinas" />
+      <RutinasPage />
     </AdminShell>
   );
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 
+import { getSession } from "@/lib/auth";
+import { misTurnos, type Turno } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   buildMonthGrid,
@@ -15,41 +17,59 @@ import { AttendanceRing } from "./attendance-ring";
 
 type AttendanceStatus = "completed" | "pending";
 
-// TODO: reemplazar por datos reales de GET /api/v1/asistencias?mes=... cuando
-// esté el endpoint. Por ahora solo genera marcas ilustrativas para el mes
-// real actual (los demás meses navegados quedan sin marcas).
-function buildMockAttendance(
-  year: number,
-  month: number,
-): Record<string, AttendanceStatus> {
-  const today = new Date();
-  if (today.getFullYear() !== year || today.getMonth() !== month) return {};
-
-  const status: Record<string, AttendanceStatus> = {};
-  status[toDateKey(today)] = "pending";
-
-  for (let offset = 2; offset <= 12; offset += 3) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - offset);
-    if (d.getMonth() === month) {
-      status[toDateKey(d)] = "completed";
-    }
-  }
-  return status;
+function firstOfMonthISO(year: number, month: number): string {
+  return toDateKey(new Date(year, month, 1));
 }
 
-const MOCK_ATTENDANCE_PERCENT = 90;
+function lastOfMonthISO(year: number, month: number): string {
+  return toDateKey(new Date(year, month + 1, 0));
+}
 
 export function CalendarCard() {
   const now = useMemo(() => new Date(), []);
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
+  // undefined = cargando, null = no se pudo obtener
+  const [turnos, setTurnos] = useState<Turno[] | null | undefined>(undefined);
 
   const weeks = useMemo(() => buildMonthGrid(year, month), [year, month]);
-  const attendance = useMemo(
-    () => buildMockAttendance(year, month),
-    [year, month],
-  );
+  const hoyKey = toDateKey(now);
+
+  useEffect(() => {
+    const session = getSession();
+    if (!session) return;
+    misTurnos(session.token, {
+      desde: firstOfMonthISO(year, month),
+      hasta: lastOfMonthISO(year, month),
+    }).then(setTurnos);
+  }, [year, month]);
+
+  const attendance = useMemo(() => {
+    const map: Record<string, AttendanceStatus> = {};
+    for (const turno of turnos ?? []) {
+      if (turno.estado === "COMPLETADO") map[turno.fecha] = "completed";
+      else if (turno.estado === "CONFIRMADO") map[turno.fecha] = "pending";
+    }
+    return map;
+  }, [turnos]);
+
+  const { porcentaje, mensaje } = useMemo(() => {
+    const relevantes = (turnos ?? []).filter(
+      (t) => t.fecha <= hoyKey && t.estado !== "CANCELADO",
+    );
+    if (relevantes.length === 0) {
+      return { porcentaje: 0, mensaje: "Todavía no hay turnos para calcular." };
+    }
+    const completados = relevantes.filter((t) => t.estado === "COMPLETADO").length;
+    const pct = Math.round((completados / relevantes.length) * 100);
+    const msg =
+      pct >= 80
+        ? "¡Excelente trabajo!"
+        : pct >= 50
+          ? "Vas bien, ¡seguí así!"
+          : "Vamos que se puede mejorar.";
+    return { porcentaje: pct, mensaje: msg };
+  }, [turnos, hoyKey]);
 
   function goToPrevMonth() {
     if (month === 0) {
@@ -173,10 +193,11 @@ export function CalendarCard() {
       </div>
 
       <div className="mt-6">
-        <AttendanceRing
-          percent={MOCK_ATTENDANCE_PERCENT}
-          message="¡Excelente trabajo!"
-        />
+        {turnos === undefined ? (
+          <p className="font-heading font-light text-foreground/50">Cargando...</p>
+        ) : (
+          <AttendanceRing percent={porcentaje} message={mensaje} />
+        )}
       </div>
     </DashboardCard>
   );

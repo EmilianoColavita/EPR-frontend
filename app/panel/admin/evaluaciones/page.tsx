@@ -1,10 +1,10 @@
 import { AdminShell } from "@/components/admin/admin-shell";
-import { AdminComingSoon } from "@/components/admin/admin-coming-soon";
+import { EvaluacionesBuscadorPage } from "@/components/admin/evaluaciones-buscador-page";
 
 export default function AdminEvaluacionesPage() {
   return (
     <AdminShell>
-      <AdminComingSoon title="Evaluaciones" />
+      <EvaluacionesBuscadorPage />
     </AdminShell>
   );
 }

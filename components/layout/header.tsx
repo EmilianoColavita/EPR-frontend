@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, User, X } from "lucide-react";
+import { ChevronDown, Menu, User, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { clearSession, getRoleRedirectPath, getSession, type Usuario } from "@/lib/auth";
 import { buttonVariants } from "@/components/ui/button";
 import { Logo } from "./logo";
 
@@ -22,6 +23,26 @@ const ANTON_SHADOW = "[text-shadow:2px_2px_0_rgba(0,0,0,0.55)]";
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+
+  useEffect(() => {
+    // localStorage solo existe en el cliente; no hay forma de conocer la
+    // sesión durante el render inicial en el servidor.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setUsuario(getSession()?.usuario ?? null);
+  }, []);
+
+  function handleLogout() {
+    clearSession();
+    setUsuario(null);
+    setProfileOpen(false);
+    setOpen(false);
+  }
+
+  const initials = usuario
+    ? `${usuario.nombre[0] ?? ""}${usuario.apellido[0] ?? ""}`.toUpperCase()
+    : "";
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-epr-dark">
@@ -51,10 +72,53 @@ export function Header() {
         </nav>
 
         <div className="hidden md:flex">
-          <Link href="/login" className={buttonVariants({ variant: "primary" })}>
-            <User className="h-4 w-4" strokeWidth={2.5} />
-            Ingresar
-          </Link>
+          {usuario ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setProfileOpen((v) => !v)}
+                aria-expanded={profileOpen}
+                className="flex items-center gap-3"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-epr-green/60 bg-epr-card font-display text-sm text-foreground">
+                  {initials}
+                </span>
+                <span className="font-display text-sm uppercase tracking-wider text-foreground">
+                  {usuario.nombre}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-foreground/60 transition-transform",
+                    profileOpen && "rotate-180",
+                  )}
+                />
+              </button>
+
+              {profileOpen && (
+                <div className="absolute right-0 top-full mt-3 w-48 overflow-hidden rounded-xl border border-white/10 bg-epr-card shadow-xl">
+                  <Link
+                    href={getRoleRedirectPath(usuario.rol)}
+                    onClick={() => setProfileOpen(false)}
+                    className="block w-full px-4 py-3 text-left font-heading text-sm text-foreground/80 transition-colors hover:bg-white/5 hover:text-epr-green"
+                  >
+                    Mi panel
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left font-heading text-sm text-foreground/80 transition-colors hover:bg-white/5 hover:text-epr-green"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/login" className={buttonVariants({ variant: "primary" })}>
+              <User className="h-4 w-4" strokeWidth={2.5} />
+              Ingresar
+            </Link>
+          )}
         </div>
 
         <button
@@ -88,14 +152,35 @@ export function Header() {
                 </Link>
               );
             })}
-            <Link
-              href="/login"
-              onClick={() => setOpen(false)}
-              className={cn(buttonVariants({ variant: "primary" }), "mt-2")}
-            >
-              <User className="h-4 w-4" strokeWidth={2.5} />
-              Ingresar
-            </Link>
+
+            {usuario ? (
+              <>
+                <Link
+                  href={getRoleRedirectPath(usuario.rol)}
+                  onClick={() => setOpen(false)}
+                  className={cn(buttonVariants({ variant: "primary" }), "mt-2")}
+                >
+                  <User className="h-4 w-4" strokeWidth={2.5} />
+                  Mi panel
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="mt-1 rounded-lg px-3 py-3 text-left font-heading text-sm text-foreground/70"
+                >
+                  Cerrar sesión
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className={cn(buttonVariants({ variant: "primary" }), "mt-2")}
+              >
+                <User className="h-4 w-4" strokeWidth={2.5} />
+                Ingresar
+              </Link>
+            )}
           </nav>
         </div>
       )}

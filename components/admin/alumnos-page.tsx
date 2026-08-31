@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import Link from "next/link";
+import { CalendarClock, Dumbbell, FileText, Plus } from "lucide-react";
 
 import { getSession, type Usuario } from "@/lib/auth";
 import { listUsuarios, actualizarActivo } from "@/lib/api";
@@ -79,7 +80,7 @@ export function AlumnosPage() {
 
         {alumnos && alumnos.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] text-left">
+            <table className="w-full min-w-[820px] text-left">
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="pb-3 font-heading text-xs font-light uppercase tracking-widest text-foreground/50">
@@ -97,6 +98,9 @@ export function AlumnosPage() {
                   <th className="pb-3 text-right font-heading text-xs font-light uppercase tracking-widest text-foreground/50">
                     Activo
                   </th>
+                  <th className="pb-3" />
+                  <th className="pb-3" />
+                  <th className="pb-3" />
                 </tr>
               </thead>
               <tbody>
@@ -126,6 +130,33 @@ export function AlumnosPage() {
                           ariaLabel={`${alumno.activo ? "Deshabilitar" : "Habilitar"} a ${alumno.nombre}`}
                         />
                       </div>
+                    </td>
+                    <td className="py-3 text-right">
+                      <Link
+                        href={`/panel/admin/alumnos/${alumno.id}/rutina`}
+                        className="inline-flex items-center gap-1.5 font-heading text-sm text-epr-green hover:underline"
+                      >
+                        <Dumbbell className="h-3.5 w-3.5" />
+                        Ver rutina
+                      </Link>
+                    </td>
+                    <td className="py-3 text-right">
+                      <Link
+                        href={`/panel/admin/alumnos/${alumno.id}/horario`}
+                        className="inline-flex items-center gap-1.5 font-heading text-sm text-foreground/70 hover:text-foreground hover:underline"
+                      >
+                        <CalendarClock className="h-3.5 w-3.5" />
+                        Ver horario
+                      </Link>
+                    </td>
+                    <td className="py-3 text-right">
+                      <Link
+                        href={`/panel/admin/alumnos/${alumno.id}/evaluaciones`}
+                        className="inline-flex items-center gap-1.5 font-heading text-sm text-foreground/70 hover:text-foreground hover:underline"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        Ver evaluaciones
+                      </Link>
                     </td>
                   </tr>
                 ))}

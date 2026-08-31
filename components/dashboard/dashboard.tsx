@@ -5,6 +5,7 @@ import { DashboardHeader } from "./dashboard-header";
 import { AccountStatusCard } from "./account-status-card";
 import { NextSessionCard } from "./next-session-card";
 import { TodayRoutineCard } from "./today-routine-card";
+import { EvaluacionesCard } from "./evaluaciones-card";
 import { CalendarCard } from "./calendar-card";
 
 function LoadingState() {
@@ -48,6 +49,7 @@ export function Dashboard() {
                 <NextSessionCard />
               </div>
               <TodayRoutineCard />
+              <EvaluacionesCard />
             </div>
 
             <CalendarCard />

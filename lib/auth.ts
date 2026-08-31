@@ -157,6 +157,16 @@ export function clearSession() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
+// Se llama cuando el backend responde 401 en un endpoint autenticado: el
+// token guardado ya no es válido (expiró o se revocó), así que limpiamos la
+// sesión y mandamos al usuario a loguearse de nuevo.
+export function handleUnauthorized() {
+  clearSession();
+  if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
+}
+
 export function getRoleRedirectPath(rol: Rol): string {
   switch (rol) {
     case "ADMIN":
