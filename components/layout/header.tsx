@@ -13,7 +13,7 @@ import { Logo } from "./logo";
 const NAV_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/metodos", label: "Metodos" },
-  { href: "/nosotros", label: "Nosotros" },
+  { href: "/#nosotros", label: "Nosotros" },
   { href: "/planes", label: "Planes" },
   { href: "/contacto", label: "Contacto" },
 ];

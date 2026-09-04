@@ -13,7 +13,7 @@ const BACKGROUND_IMAGES = [
 
 export function About() {
   return (
-    <section className="relative overflow-hidden bg-epr-dark">
+    <section id="nosotros" className="relative overflow-hidden bg-epr-dark scroll-mt-28">
       <div className="absolute inset-0 grid grid-cols-3">
         {BACKGROUND_IMAGES.map((src, index) => (
           <div key={src} className="relative h-full w-full">
@@ -60,17 +60,19 @@ export function About() {
 
           <div className="mt-6 space-y-5 font-heading font-light text-foreground/85">
             <p>
-              Detrás de E.P.R está la pasión por llevar la preparación
-              física al siguiente nivel. Liderado por Luciano Colavita,
-              nuestro equipo combina experiencia en el alto rendimiento,
-              evaluación continua y tecnología para ofrecer un
-              entrenamiento con propósito real.
+              Detrás de E.P.R está la pasión por llevar el rendimiento
+              físico de los atletas al siguiente nivel. Liderado por
+              Luciano Colavita: Profesor en Educación Física egresado de
+              la Universidad Nacional de La Plata (UNLP). Con un
+              Post-Grado en Alto Rendimiento Deportivo (LARD), egresado
+              en la Universidad Nacional de Lomas de Zamora.
             </p>
             <p>
-              En alianza con MuttiGimnasio, creamos un entorno diseñado
-              para que cada atleta y usuario encuentre las herramientas
-              precisas para superar sus límites con seguridad y máxima
-              eficiencia.
+              En conjunto con MuttiGimnasio creamos un entorno diseñado
+              para que cada atleta y sujeto del fitness o deportistas
+              recreativos accedan a las herramientas tecnológicas del
+              alto rendimiento y puedan evaluarse y superar sus
+              registros.
             </p>
           </div>
         </motion.div>

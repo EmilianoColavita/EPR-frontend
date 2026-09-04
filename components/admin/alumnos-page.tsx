@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, Dumbbell, FileText, Plus } from "lucide-react";
+import { CalendarClock, Dumbbell, FileText, Plus, Wallet } from "lucide-react";
 
 import { getSession, type Usuario } from "@/lib/auth";
 import { listUsuarios, actualizarActivo } from "@/lib/api";
@@ -80,7 +80,7 @@ export function AlumnosPage() {
 
         {alumnos && alumnos.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-left">
+            <table className="w-full min-w-[960px] text-left">
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="pb-3 font-heading text-xs font-light uppercase tracking-widest text-foreground/50">
@@ -98,6 +98,7 @@ export function AlumnosPage() {
                   <th className="pb-3 text-right font-heading text-xs font-light uppercase tracking-widest text-foreground/50">
                     Activo
                   </th>
+                  <th className="pb-3" />
                   <th className="pb-3" />
                   <th className="pb-3" />
                   <th className="pb-3" />
@@ -156,6 +157,15 @@ export function AlumnosPage() {
                       >
                         <FileText className="h-3.5 w-3.5" />
                         Ver evaluaciones
+                      </Link>
+                    </td>
+                    <td className="py-3 text-right">
+                      <Link
+                        href={`/panel/admin/alumnos/${alumno.id}/cuenta`}
+                        className="inline-flex items-center gap-1.5 font-heading text-sm text-foreground/70 hover:text-foreground hover:underline"
+                      >
+                        <Wallet className="h-3.5 w-3.5" />
+                        Ver cuenta
                       </Link>
                     </td>
                   </tr>

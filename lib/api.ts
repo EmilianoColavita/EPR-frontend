@@ -84,6 +84,15 @@ export async function getEstadoCuenta(token: string): Promise<EstadoCuenta | nul
   return authGet<EstadoCuenta>("/api/v1/cuotas/mi-estado", token);
 }
 
+export type CuotasResumen = {
+  alDia: number;
+  vencidos: number;
+};
+
+export async function getCuotasResumen(token: string): Promise<CuotasResumen | null> {
+  return authGet<CuotasResumen>("/api/v1/cuotas/resumen", token);
+}
+
 // --- Usuarios (gestión desde el panel de ADMIN) ---
 
 type ApiErrorBody = {
@@ -664,4 +673,95 @@ export async function descargarMiEvaluacion(
   evaluacionId: number,
 ): Promise<Blob | null> {
   return authDownload(`/api/v1/evaluaciones/mias/${evaluacionId}/archivo`, token);
+}
+
+// --- Cuenta / pagos (plan de membresía, distinto del Plan de la web pública) ---
+
+export type PlanCuota = {
+  id: number;
+  nombre: string;
+  duracionDias: number;
+  precio: number | null;
+  activo: boolean;
+};
+
+export type PlanCuotaInput = {
+  nombre: string;
+  duracionDias: number;
+  precio?: number;
+};
+
+export async function listPlanesCuota(token: string): Promise<PlanCuota[] | null> {
+  return authGet<PlanCuota[]>("/api/v1/planes-cuota", token);
+}
+
+export async function crearPlanCuota(
+  token: string,
+  input: PlanCuotaInput,
+): Promise<PlanCuota> {
+  return authMutate<PlanCuota>("/api/v1/planes-cuota", "POST", token, input);
+}
+
+export async function actualizarPlanCuota(
+  token: string,
+  id: number,
+  input: PlanCuotaInput,
+): Promise<PlanCuota> {
+  return authMutate<PlanCuota>(`/api/v1/planes-cuota/${id}`, "PUT", token, input);
+}
+
+export async function actualizarActivoPlanCuota(
+  token: string,
+  id: number,
+  activo: boolean,
+): Promise<PlanCuota> {
+  return authMutate<PlanCuota>(`/api/v1/planes-cuota/${id}/activo`, "PATCH", token, {
+    activo,
+  });
+}
+
+export type CuentaAlumno = {
+  planActual: PlanCuota | null;
+  fechaVencimiento: string | null;
+  alDia: boolean;
+};
+
+export async function getCuentaAlumno(
+  token: string,
+  alumnoId: number,
+): Promise<CuentaAlumno | null> {
+  return authGet<CuentaAlumno>(`/api/v1/alumnos/${alumnoId}/cuenta`, token);
+}
+
+export type Pago = {
+  id: number;
+  alumno: {
+    id: number;
+    nombre: string;
+    apellido: string;
+  };
+  planCuota: PlanCuota;
+  fecha: string;
+  monto: number | null;
+};
+
+export type PagoInput = {
+  planCuotaId: number;
+  fecha?: string;
+  monto?: number;
+};
+
+export async function listPagosAlumno(
+  token: string,
+  alumnoId: number,
+): Promise<Pago[] | null> {
+  return authGet<Pago[]>(`/api/v1/alumnos/${alumnoId}/pagos`, token);
+}
+
+export async function registrarPago(
+  token: string,
+  alumnoId: number,
+  input: PagoInput,
+): Promise<Pago> {
+  return authMutate<Pago>(`/api/v1/alumnos/${alumnoId}/pagos`, "POST", token, input);
 }

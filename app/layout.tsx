@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${anton.variable} ${barlowCondensed.variable} ${inter.variable} h-full antialiased`}
+      className={`${anton.variable} ${barlowCondensed.variable} ${inter.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full flex flex-col bg-epr-dark font-sans text-foreground">
         {children}

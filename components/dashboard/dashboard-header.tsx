@@ -19,7 +19,7 @@ export function DashboardHeader({ usuario }: { usuario: Usuario }) {
 
   const navLinks = [
     { href: getRoleRedirectPath(usuario.rol), label: "Dashboard" },
-    { href: "/nosotros", label: "Nosotros" },
+    { href: "/#nosotros", label: "Nosotros" },
     { href: "/planes", label: "Planes" },
     { href: "/contacto", label: "Contacto" },
   ];

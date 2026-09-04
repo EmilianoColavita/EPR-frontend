@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -15,6 +15,23 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [details, setDetails] = useState<string[] | null>(null);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (!redirectTo) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Algunos navegadores bloquean el autoplay con sonido si pasó un
+    // instante desde el último click del usuario (acá, el submit del
+    // login). Si lo rechaza, reintentamos silenciado en vez de dejar el
+    // video trabado sin reproducirse.
+    video.play().catch(() => {
+      video.muted = true;
+      video.play().catch(() => router.push(redirectTo));
+    });
+  }, [redirectTo, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,7 +42,7 @@ export function LoginForm() {
     try {
       const session = await login(email, password);
       saveSession(session);
-      router.push(getRoleRedirectPath(session.usuario.rol));
+      setRedirectTo(getRoleRedirectPath(session.usuario.rol));
     } catch (err) {
       if (err instanceof AuthError) {
         setError(err.message);
@@ -35,6 +52,21 @@ export function LoginForm() {
       }
       setLoading(false);
     }
+  }
+
+  if (redirectTo) {
+    return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black">
+        <video
+          ref={videoRef}
+          src="/videos/login.mp4"
+          playsInline
+          onEnded={() => router.push(redirectTo)}
+          onError={() => router.push(redirectTo)}
+          className="max-h-[100vh] max-w-[100vw]"
+        />
+      </div>
+    );
   }
 
   return (
