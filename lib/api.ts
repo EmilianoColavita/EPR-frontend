@@ -765,3 +765,109 @@ export async function registrarPago(
 ): Promise<Pago> {
   return authMutate<Pago>(`/api/v1/alumnos/${alumnoId}/pagos`, "POST", token, input);
 }
+
+// --- Comprobantes de pago (el alumno sube, el admin confirma o rechaza) ---
+
+export type EstadoComprobante = "PENDIENTE" | "CONFIRMADO" | "RECHAZADO";
+
+export type ComprobantePago = {
+  id: number;
+  alumno: {
+    id: number;
+    nombre: string;
+    apellido: string;
+  };
+  nombreArchivo: string;
+  fecha: string;
+  planCuota: PlanCuota | null;
+  monto: number | null;
+  estado: EstadoComprobante;
+  pago: Pago | null;
+  notaRechazo: string | null;
+};
+
+export type SubirComprobanteInput = {
+  archivo: File;
+  planCuotaId?: number;
+  monto?: number;
+  fecha?: string;
+};
+
+export async function subirComprobante(
+  token: string,
+  input: SubirComprobanteInput,
+): Promise<ComprobantePago> {
+  const formData = new FormData();
+  formData.append("archivo", input.archivo);
+  if (input.planCuotaId != null) formData.append("planCuotaId", String(input.planCuotaId));
+  if (input.monto != null) formData.append("monto", String(input.monto));
+  if (input.fecha) formData.append("fecha", input.fecha);
+  return authUpload<ComprobantePago>("/api/v1/comprobantes-pago", token, formData);
+}
+
+export async function misComprobantes(token: string): Promise<ComprobantePago[] | null> {
+  return authGet<ComprobantePago[]>("/api/v1/comprobantes-pago/mios", token);
+}
+
+export async function descargarMiComprobante(
+  token: string,
+  comprobanteId: number,
+): Promise<Blob | null> {
+  return authDownload(`/api/v1/comprobantes-pago/mios/${comprobanteId}/archivo`, token);
+}
+
+export async function listComprobantesAlumno(
+  token: string,
+  alumnoId: number,
+): Promise<ComprobantePago[] | null> {
+  return authGet<ComprobantePago[]>(`/api/v1/alumnos/${alumnoId}/comprobantes-pago`, token);
+}
+
+export async function descargarComprobanteAlumno(
+  token: string,
+  alumnoId: number,
+  comprobanteId: number,
+): Promise<Blob | null> {
+  return authDownload(
+    `/api/v1/alumnos/${alumnoId}/comprobantes-pago/${comprobanteId}/archivo`,
+    token,
+  );
+}
+
+export type ConfirmarComprobanteInput = {
+  planCuotaId: number;
+  fecha?: string;
+  monto?: number;
+};
+
+export async function confirmarComprobante(
+  token: string,
+  comprobanteId: number,
+  input: ConfirmarComprobanteInput,
+): Promise<ComprobantePago> {
+  return authMutate<ComprobantePago>(
+    `/api/v1/comprobantes-pago/${comprobanteId}/confirmar`,
+    "POST",
+    token,
+    input,
+  );
+}
+
+export async function rechazarComprobante(
+  token: string,
+  comprobanteId: number,
+  nota?: string,
+): Promise<ComprobantePago> {
+  return authMutate<ComprobantePago>(
+    `/api/v1/comprobantes-pago/${comprobanteId}/rechazar`,
+    "POST",
+    token,
+    { nota },
+  );
+}
+
+export async function listComprobantesPendientes(
+  token: string,
+): Promise<ComprobantePago[] | null> {
+  return authGet<ComprobantePago[]>("/api/v1/comprobantes-pago?estado=PENDIENTE", token);
+}

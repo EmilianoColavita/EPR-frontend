@@ -65,6 +65,13 @@ export function LoginForm() {
           onError={() => router.push(redirectTo)}
           className="max-h-[100vh] max-w-[100vw]"
         />
+        <button
+          type="button"
+          onClick={() => router.push(redirectTo)}
+          className="absolute bottom-6 right-6 font-heading text-sm text-foreground/70 transition-colors hover:text-foreground"
+        >
+          Saltar
+        </button>
       </div>
     );
   }

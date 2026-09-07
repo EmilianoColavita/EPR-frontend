@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Dumbbell } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Dumbbell } from "lucide-react";
 
 import { getSession } from "@/lib/auth";
 import { getMiRutina, seleccionarDia, type Rutina } from "@/lib/api";
@@ -125,6 +126,14 @@ export function TodayRoutineCard() {
                 Día sugerido
               </p>
             )}
+
+            <Link
+              href="/panel/alumno/rutina"
+              className="mt-4 inline-flex items-center gap-1 font-heading text-sm text-epr-green hover:underline"
+            >
+              Ver rutina completa
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </div>
 

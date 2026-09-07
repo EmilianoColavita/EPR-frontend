@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, Download, FileText } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Download, FileText } from "lucide-react";
 
 import { getSession } from "@/lib/auth";
 import { descargarMiEvaluacion, misEvaluaciones, type Evaluacion } from "@/lib/api";
 import { descargarBlob } from "@/lib/download";
 import { formatDateShort } from "@/lib/format";
-import { cn } from "@/lib/utils";
 import { DashboardCard, DashboardCardIcon } from "./dashboard-card";
 
 export function EvaluacionesCard() {
@@ -16,7 +16,6 @@ export function EvaluacionesCard() {
     undefined,
   );
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
-  const [showHistorial, setShowHistorial] = useState(false);
 
   useEffect(() => {
     const session = getSession();
@@ -55,9 +54,7 @@ export function EvaluacionesCard() {
     );
   }
 
-  const ordenadas = evaluaciones
-    .slice()
-    .sort((a, b) => b.id - a.id);
+  const ordenadas = evaluaciones.slice().sort((a, b) => b.id - a.id);
   const [ultima, ...anteriores] = ordenadas;
 
   if (!ultima) {
@@ -110,50 +107,15 @@ export function EvaluacionesCard() {
         </button>
       </div>
 
-      {anteriores.length > 0 && (
-        <div className="mt-4 border-t border-white/10 pt-4">
-          <button
-            type="button"
-            onClick={() => setShowHistorial((v) => !v)}
-            className="flex items-center gap-1.5 font-heading text-sm text-foreground/60 transition-colors hover:text-foreground"
-          >
-            <ChevronDown
-              className={cn("h-4 w-4 transition-transform", showHistorial && "rotate-180")}
-            />
-            {showHistorial ? "Ocultar" : "Ver"} evaluaciones anteriores (
-            {anteriores.length})
-          </button>
-
-          {showHistorial && (
-            <div className="mt-3 flex flex-col gap-2">
-              {anteriores.map((evaluacion) => (
-                <div
-                  key={evaluacion.id}
-                  className="flex flex-wrap items-center gap-4 rounded-xl border border-white/10 p-3"
-                >
-                  <div className="min-w-[140px] flex-1">
-                    <p className="font-heading text-sm text-foreground">
-                      {formatDateShort(evaluacion.fechaSubida)}
-                    </p>
-                    <p className="font-heading text-xs font-light text-foreground/50">
-                      {evaluacion.nombreArchivo}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={downloadingId === evaluacion.id}
-                    onClick={() => handleDownload(evaluacion)}
-                    className="flex items-center gap-1.5 font-heading text-sm text-foreground/70 transition-colors hover:text-foreground disabled:opacity-50"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    {downloadingId === evaluacion.id ? "Descargando..." : "Descargar"}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="mt-4 border-t border-white/10 pt-4">
+        <Link
+          href="/panel/alumno/evaluaciones"
+          className="inline-flex items-center gap-1 font-heading text-sm text-foreground/60 transition-colors hover:text-foreground"
+        >
+          Ver todas mis evaluaciones{anteriores.length > 0 && ` (${ordenadas.length})`}
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
     </DashboardCard>
   );
 }

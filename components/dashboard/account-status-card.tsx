@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Wallet } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, Wallet } from "lucide-react";
 
 import { DashboardCard, DashboardCardIcon } from "./dashboard-card";
 import { getSession } from "@/lib/auth";
@@ -64,6 +65,14 @@ export function AccountStatusCard() {
                 </p>
               </>
             )}
+
+            <Link
+              href="/panel/alumno/pagos"
+              className="mt-4 inline-flex items-center gap-1 font-heading text-sm text-epr-green hover:underline"
+            >
+              Ver mis pagos
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </>
         )}
       </div>

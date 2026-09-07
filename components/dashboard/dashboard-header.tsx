@@ -19,9 +19,10 @@ export function DashboardHeader({ usuario }: { usuario: Usuario }) {
 
   const navLinks = [
     { href: getRoleRedirectPath(usuario.rol), label: "Dashboard" },
-    { href: "/#nosotros", label: "Nosotros" },
-    { href: "/planes", label: "Planes" },
-    { href: "/contacto", label: "Contacto" },
+    { href: "/panel/alumno/rutina", label: "Rutinas" },
+    { href: "/panel/alumno/turnos", label: "Turnos" },
+    { href: "/panel/alumno/evaluaciones", label: "Evaluaciones" },
+    { href: "/panel/alumno/pagos", label: "Pagos" },
   ];
 
   const initials = `${usuario.nombre[0] ?? ""}${usuario.apellido[0] ?? ""}`.toUpperCase();

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CalendarClock, Dumbbell, FileText, Plus, Wallet } from "lucide-react";
 
 import { getSession, type Usuario } from "@/lib/auth";
-import { listUsuarios, actualizarActivo } from "@/lib/api";
+import { listUsuarios, actualizarActivo, listComprobantesPendientes } from "@/lib/api";
 import { formatDateShort } from "@/lib/format";
 import { buttonVariants } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -19,11 +19,15 @@ export function AlumnosPage() {
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [alumnosConPendiente, setAlumnosConPendiente] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const session = getSession();
     if (!session) return;
     listUsuarios(session.token, "ALUMNO").then(setAlumnos);
+    listComprobantesPendientes(session.token).then((pendientes) => {
+      if (pendientes) setAlumnosConPendiente(new Set(pendientes.map((c) => c.alumno.id)));
+    });
   }, []);
 
   async function handleToggle(id: number, next: boolean) {
@@ -166,6 +170,12 @@ export function AlumnosPage() {
                       >
                         <Wallet className="h-3.5 w-3.5" />
                         Ver cuenta
+                        {alumnosConPendiente.has(alumno.id) && (
+                          <span
+                            className="h-2 w-2 rounded-full bg-yellow-400"
+                            title="Tiene un comprobante pendiente de revisión"
+                          />
+                        )}
                       </Link>
                     </td>
                   </tr>
