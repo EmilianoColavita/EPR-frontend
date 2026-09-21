@@ -63,7 +63,39 @@ export function RecentStudentsCard() {
       )}
 
       {alumnos && alumnos.length > 0 && (
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 flex flex-col gap-3 md:hidden">
+          {alumnos.map((student) => (
+            <div key={student.id} className="rounded-xl border border-white/10 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-heading font-semibold text-foreground">
+                    {student.nombre} {student.apellido}
+                  </p>
+                  <p className="mt-1 font-heading text-sm font-light text-foreground/60">
+                    {student.email}
+                  </p>
+                  <p className="mt-1 font-heading text-xs font-light text-foreground/40">
+                    Alta: {formatDateShort(student.fechaRegistro)}
+                  </p>
+                </div>
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full border px-3 py-1 font-heading text-xs uppercase",
+                    student.activo
+                      ? "border-epr-green/50 text-epr-green"
+                      : "border-white/20 text-foreground/50",
+                  )}
+                >
+                  {student.activo ? "Activo" : "Inactivo"}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {alumnos && alumnos.length > 0 && (
+        <div className="mt-4 hidden overflow-x-auto md:block">
           <table className="w-full min-w-[480px] text-left">
             <thead>
               <tr className="border-b border-white/10">

@@ -21,9 +21,16 @@ export function EvaluacionesBuscadorPage() {
   }, []);
 
   const resultados = useMemo(() => {
+    if (!alumnos) return [];
+    const ordenados = alumnos
+      .slice()
+      .sort((a, b) =>
+        `${a.nombre} ${a.apellido}`.localeCompare(`${b.nombre} ${b.apellido}`),
+      );
+
     const q = query.trim().toLowerCase();
-    if (!q || !alumnos) return [];
-    return alumnos.filter(
+    if (!q) return ordenados;
+    return ordenados.filter(
       (a) =>
         `${a.nombre} ${a.apellido}`.toLowerCase().includes(q) ||
         a.email.toLowerCase().includes(q),
@@ -65,14 +72,25 @@ export function EvaluacionesBuscadorPage() {
               </p>
             )}
 
-            {query.trim().length > 0 && alumnos && resultados.length === 0 && (
+            {alumnos && alumnos.length === 0 && (
+              <p className="mt-3 font-heading font-light text-foreground/50">
+                Todavía no hay alumnos dados de alta.
+              </p>
+            )}
+
+            {query.trim().length > 0 && alumnos && alumnos.length > 0 && resultados.length === 0 && (
               <p className="mt-3 font-heading font-light text-foreground/50">
                 No se encontraron alumnos para &quot;{query}&quot;.
               </p>
             )}
 
             {resultados.length > 0 && (
-              <div className="mt-3 flex flex-col gap-1">
+              <div className="mt-4 flex flex-col gap-1 border-t border-white/10 pt-4">
+                {query.trim().length === 0 && (
+                  <span className="mb-1 font-heading text-xs font-light uppercase tracking-widest text-foreground/40">
+                    Todos los alumnos
+                  </span>
+                )}
                 {resultados.map((alumno) => (
                   <button
                     key={alumno.id}

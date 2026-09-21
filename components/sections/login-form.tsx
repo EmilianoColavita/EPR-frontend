@@ -127,6 +127,12 @@ export function LoginForm() {
               placeholder="••••••••"
               className="rounded-xl border border-white/15 bg-epr-dark px-4 py-3 font-sans text-foreground outline-none transition-colors focus:border-epr-green disabled:opacity-50"
             />
+            <Link
+              href="/olvide-contrasena"
+              className="self-end font-heading text-xs font-light text-foreground/60 hover:text-epr-green hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
 
           {error && (

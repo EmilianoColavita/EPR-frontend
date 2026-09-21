@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Download, Upload } from "lucide-react";
+import { Check, CheckCircle2, CircleAlert, Copy, Download, Upload } from "lucide-react";
 
 import { useRequireRole } from "@/lib/use-require-role";
 import { getSession } from "@/lib/auth";
@@ -18,11 +18,49 @@ import {
   type PlanCuota,
 } from "@/lib/api";
 import { descargarBlob } from "@/lib/download";
-import { formatDateShort } from "@/lib/format";
+import { diasDesde, esVencido, formatDateShort } from "@/lib/format";
+import { MP_ALIAS, MP_CVU, MP_NOMBRE } from "@/lib/site-info";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardCard } from "./dashboard-card";
+
+function CopyRow({ label, value }: { label: string; value: string }) {
+  const [copiado, setCopiado] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1500);
+    } catch {
+      // portapapeles no disponible (ej: sin HTTPS); no hacemos nada más.
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 px-4 py-3">
+      <div>
+        <p className="font-heading text-xs font-light uppercase tracking-widest text-foreground/50">
+          {label}
+        </p>
+        <p className="font-heading font-semibold text-foreground">{value}</p>
+      </div>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="flex items-center gap-1.5 rounded-full border border-white/25 px-3 py-1.5 font-heading text-xs text-foreground/70 transition-colors hover:border-epr-green hover:text-epr-green"
+      >
+        {copiado ? (
+          <Check className="h-3.5 w-3.5 text-epr-green" />
+        ) : (
+          <Copy className="h-3.5 w-3.5" />
+        )}
+        {copiado ? "Copiado" : "Copiar"}
+      </button>
+    </div>
+  );
+}
 
 const inputClass =
   "w-full rounded-xl border border-white/15 bg-epr-dark px-4 py-3 font-sans text-foreground outline-none transition-colors focus:border-epr-green disabled:opacity-50";
@@ -125,6 +163,27 @@ export function MisPagosPage() {
     return <LoadingState />;
   }
 
+  if (estado?.becado) {
+    return (
+      <>
+        <DashboardHeader usuario={usuario} />
+        <section className="min-h-[calc(100vh-7rem)] bg-epr-dark px-4 py-16 sm:px-6 lg:px-10">
+          <div className="mx-auto max-w-4xl">
+            <h1 className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground">
+              Pagos
+            </h1>
+            <DashboardCard className="mt-6">
+              <p className="font-heading font-light text-foreground/70">
+                Formás parte del Programa de Becas E.P.R., así que no necesitás
+                cargar comprobantes de pago.
+              </p>
+            </DashboardCard>
+          </div>
+        </section>
+      </>
+    );
+  }
+
   const planesActivos = (planes ?? []).filter((p) => p.activo);
   const ordenados = (comprobantes ?? []).slice().sort((a, b) => b.id - a.id);
 
@@ -132,17 +191,71 @@ export function MisPagosPage() {
     <>
       <DashboardHeader usuario={usuario} />
       <section className="min-h-[calc(100vh-7rem)] bg-epr-dark px-4 py-16 sm:px-6 lg:px-10">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-5xl">
           <h1 className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground">
             Pagos
           </h1>
-          <p className="mt-2 font-heading font-light text-foreground/50">
-            {estado?.alDia
-              ? `Estás al día${estado.proximoVencimiento ? ` · vence el ${formatDateShort(estado.proximoVencimiento)}` : ""}.`
-              : "Tu cuota está pendiente. Subí el comprobante de tu último pago para que el administrador lo confirme."}
-          </p>
+          {estado === undefined && (
+            <p className="mt-2 font-heading font-light text-foreground/50">
+              Cargando...
+            </p>
+          )}
 
-          <DashboardCard className="mt-6">
+          {estado === null && (
+            <p className="mt-2 font-heading font-light text-foreground/50">
+              No se pudo cargar tu estado de cuenta.
+            </p>
+          )}
+
+          {estado && estado.alDia && (
+            <div className="mt-4 flex items-center gap-3">
+              <CheckCircle2 className="h-8 w-8 shrink-0 text-epr-green" />
+              <div>
+                <p className="font-heading text-2xl font-bold uppercase leading-none tracking-tight text-epr-green">
+                  Al día
+                </p>
+                {estado.proximoVencimiento && (
+                  <p className="mt-1 font-heading text-sm font-light text-foreground/60">
+                    Vence el {formatDateShort(estado.proximoVencimiento)}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {estado && !estado.alDia && !esVencido(estado.proximoVencimiento) && (
+            <div className="mt-4 flex items-center gap-3">
+              <CircleAlert className="h-8 w-8 shrink-0 text-red-400" />
+              <div>
+                <p className="font-heading text-2xl font-bold uppercase leading-none tracking-tight text-red-400">
+                  Pendiente
+                </p>
+                <p className="mt-1 font-heading text-sm font-light text-foreground/60">
+                  Subí el comprobante de tu último pago para que el
+                  administrador lo confirme.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {estado && !estado.alDia && esVencido(estado.proximoVencimiento) && (
+            <div className="mt-4 flex items-center gap-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3">
+              <CircleAlert className="h-8 w-8 shrink-0 text-red-500" />
+              <div>
+                <p className="font-heading text-2xl font-bold uppercase leading-none tracking-tight text-red-500">
+                  Vencido
+                </p>
+                <p className="mt-1 font-heading text-sm font-light text-red-400/90">
+                  Hace {diasDesde(estado.proximoVencimiento!)} días que tu cuota
+                  está vencida. Subí el comprobante de tu último pago para
+                  regularizar tu cuenta.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <DashboardCard className="lg:col-span-2">
             <h2 className="font-heading text-lg font-bold uppercase tracking-tight text-foreground">
               Subir comprobante
             </h2>
@@ -229,6 +342,30 @@ export function MisPagosPage() {
               </div>
             )}
           </DashboardCard>
+
+          <DashboardCard className="border-epr-green/30 lg:col-span-1">
+            <h2 className="font-heading text-lg font-bold uppercase tracking-tight text-foreground">
+              Datos para transferir
+            </h2>
+            <p className="mt-1 font-heading text-sm font-light text-foreground/60">
+              Transferí por Mercado Pago a estos datos y después subí el
+              comprobante.
+            </p>
+
+            <div className="mt-4 flex flex-col gap-2">
+              <div className="rounded-xl border border-white/10 px-4 py-3">
+                <p className="font-heading text-xs font-light uppercase tracking-widest text-foreground/50">
+                  Nombre
+                </p>
+                <p className="font-heading font-semibold text-foreground">
+                  {MP_NOMBRE}
+                </p>
+              </div>
+              <CopyRow label="Alias" value={MP_ALIAS} />
+              <CopyRow label="CVU" value={MP_CVU} />
+            </div>
+          </DashboardCard>
+          </div>
 
           <DashboardCard className="mt-6">
             <h2 className="font-heading text-lg font-bold uppercase tracking-tight text-foreground">

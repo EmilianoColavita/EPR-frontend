@@ -16,6 +16,7 @@ const NAV_LINKS = [
   { href: "/#nosotros", label: "Nosotros" },
   { href: "/planes", label: "Planes" },
   { href: "/contacto", label: "Contacto" },
+  { href: "/becas", label: "Becas" },
 ];
 
 const ANTON_SHADOW = "[text-shadow:2px_2px_0_rgba(0,0,0,0.55)]";
@@ -35,9 +36,9 @@ export function Header() {
 
   function handleLogout() {
     clearSession();
-    setUsuario(null);
-    setProfileOpen(false);
-    setOpen(false);
+    // Recarga la página para que toda la vista (no solo este header) refleje
+    // que ya no hay sesión, igual que el logout dentro del panel.
+    window.location.href = "/";
   }
 
   const initials = usuario

@@ -1,4 +1,5 @@
 import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import { LoginForm } from "@/components/sections/login-form";
 
 export default function LoginPage() {
@@ -8,6 +9,7 @@ export default function LoginPage() {
       <main className="flex-1">
         <LoginForm />
       </main>
+      <Footer />
     </>
   );
 }

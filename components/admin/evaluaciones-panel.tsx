@@ -224,7 +224,7 @@ export function EvaluacionesPanel({ alumnoId }: { alumnoId: number }) {
                     type="button"
                     onClick={() => setConfirmDeleteId(evaluacion.id)}
                     aria-label="Eliminar evaluación"
-                    className="text-foreground/40 transition-colors hover:text-red-400"
+                    className="-m-2 p-2 text-foreground/40 transition-colors hover:text-red-400"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

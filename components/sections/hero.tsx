@@ -76,13 +76,13 @@ export function Hero() {
 
       <div className="relative mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-10">
         <motion.div
-          className="max-w-3xl"
+          className="max-w-3xl text-center sm:mx-0 sm:text-left"
           variants={containerVariants}
           initial="hidden"
           animate="show"
         >
           <motion.h1
-            className="font-heading text-7xl font-semibold italic uppercase leading-[0.95] tracking-tight sm:text-8xl md:text-9xl"
+            className="font-heading text-5xl font-semibold italic uppercase leading-[0.95] tracking-tight sm:text-7xl md:text-8xl lg:text-9xl"
             variants={lineContainerVariants}
           >
             {HERO_LETTERS.map((line) => (
@@ -97,7 +97,7 @@ export function Hero() {
             ))}
           </motion.h1>
 
-          <motion.div className="mt-8 max-w-md pt-6" variants={fadeUp}>
+          <motion.div className="mx-auto mt-8 max-w-md pt-6 sm:mx-0" variants={fadeUp}>
             <div
               className="h-px w-full"
               style={{
@@ -111,11 +111,11 @@ export function Hero() {
           </motion.div>
 
           <motion.div
-            className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center"
+            className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:items-center"
             variants={fadeUp}
           >
             <Link
-              href="/contacto"
+              href="/reservar-evaluacion"
               className={buttonVariants({
                 variant: "primary",
                 size: "lg",

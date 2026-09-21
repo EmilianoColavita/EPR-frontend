@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { clearSession, getRoleRedirectPath, type Usuario } from "@/lib/auth";
 import { Logo } from "@/components/layout/logo";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { NotificationsBell } from "./notifications-bell";
 
 const ANTON_SHADOW = "[text-shadow:2px_2px_0_rgba(0,0,0,0.55)]";
 
@@ -24,8 +26,6 @@ export function DashboardHeader({ usuario }: { usuario: Usuario }) {
     { href: "/panel/alumno/evaluaciones", label: "Evaluaciones" },
     { href: "/panel/alumno/pagos", label: "Pagos" },
   ];
-
-  const initials = `${usuario.nombre[0] ?? ""}${usuario.apellido[0] ?? ""}`.toUpperCase();
 
   function handleLogout() {
     clearSession();
@@ -59,25 +59,17 @@ export function DashboardHeader({ usuario }: { usuario: Usuario }) {
           })}
         </nav>
 
-        <div className="hidden items-center gap-5 md:flex">
-          <button
-            type="button"
-            aria-label="Notificaciones"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 transition-colors hover:text-epr-green"
-          >
-            <Bell className="h-5 w-5" />
-          </button>
+        <div className="flex items-center gap-3 sm:gap-5">
+          <NotificationsBell />
 
-          <div className="relative">
+          <div className="relative hidden md:block">
             <button
               type="button"
               onClick={() => setProfileOpen((v) => !v)}
               aria-expanded={profileOpen}
               className="flex items-center gap-3"
             >
-              <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-epr-green/60 bg-epr-card font-display text-sm text-foreground">
-                {initials}
-              </span>
+              <ProfileAvatar usuario={usuario} />
               <span className="font-display text-sm uppercase tracking-wider text-foreground">
                 {usuario.nombre} {usuario.apellido}
               </span>
@@ -91,6 +83,13 @@ export function DashboardHeader({ usuario }: { usuario: Usuario }) {
 
             {profileOpen && (
               <div className="absolute right-0 top-full mt-3 w-48 overflow-hidden rounded-xl border border-white/10 bg-epr-card shadow-xl">
+                <Link
+                  href="/panel/alumno/configuracion"
+                  onClick={() => setProfileOpen(false)}
+                  className="block w-full px-4 py-3 text-left font-heading text-sm text-foreground/80 transition-colors hover:bg-white/5 hover:text-epr-green"
+                >
+                  Mi cuenta
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -101,22 +100,38 @@ export function DashboardHeader({ usuario }: { usuario: Usuario }) {
               </div>
             )}
           </div>
-        </div>
 
-        <button
-          type="button"
-          onClick={() => setMenuOpen((v) => !v)}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-foreground md:hidden"
-          aria-label={menuOpen ? "Cerrar menu" : "Abrir menu"}
-          aria-expanded={menuOpen}
-        >
-          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-foreground md:hidden"
+            aria-label={menuOpen ? "Cerrar menu" : "Abrir menu"}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {menuOpen && (
         <div className="border-t border-white/5 bg-epr-dark md:hidden">
-          <nav className="flex flex-col gap-1 px-4 py-4">
+          <Link
+            href="/panel/alumno/configuracion"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-4"
+          >
+            <ProfileAvatar usuario={usuario} className="h-12 w-12 text-base" />
+            <span className="text-left">
+              <span className="block font-display text-sm uppercase tracking-wider text-foreground">
+                {usuario.nombre} {usuario.apellido}
+              </span>
+              <span className="block font-heading text-xs font-light text-foreground/50">
+                Ver mi cuenta
+              </span>
+            </span>
+          </Link>
+
+          <nav className="flex flex-col gap-1 border-t border-white/5 px-4 py-4">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (

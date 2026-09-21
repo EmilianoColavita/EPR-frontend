@@ -9,6 +9,9 @@ export type Usuario = {
   rol: Rol;
   activo: boolean;
   fechaRegistro: string;
+  becado?: boolean;
+  alDia?: boolean;
+  fechaVencimiento?: string | null;
 };
 
 export type Session = {
@@ -124,6 +127,85 @@ export async function register(input: RegisterInput): Promise<Usuario> {
   return (await res.json()) as Usuario;
 }
 
+// Siempre responde con éxito, exista o no ese email en la base — evita que
+// el formulario sirva para averiguar qué mails están registrados. Si el
+// mail existe, el backend le manda un link con token de un solo uso.
+export async function solicitarResetPassword(email: string): Promise<void> {
+  if (!API_URL) {
+    throw new AuthError("NEXT_PUBLIC_API_URL no está configurada.", 0);
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/api/v1/auth/olvide-contrasena`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+      cache: "no-store",
+    });
+  } catch {
+    throw new AuthError(
+      "No se pudo conectar con el servidor. Verificá tu conexión o que el backend esté corriendo.",
+      0,
+    );
+  }
+
+  if (!res.ok) {
+    let body: ApiErrorBody | null = null;
+    try {
+      body = (await res.json()) as ApiErrorBody;
+    } catch {
+      // el backend no devolvió JSON, seguimos con el mensaje genérico
+    }
+    throw new AuthError(
+      body?.message ?? "No se pudo procesar la solicitud.",
+      res.status,
+      body?.details ?? null,
+    );
+  }
+}
+
+// A diferencia de solicitarResetPassword, acá sí puede fallar de forma
+// visible (token inválido, vencido o ya usado) — el usuario necesita saber
+// que tiene que pedir un link nuevo.
+export async function restablecerPassword(
+  token: string,
+  password: string,
+): Promise<void> {
+  if (!API_URL) {
+    throw new AuthError("NEXT_PUBLIC_API_URL no está configurada.", 0);
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/api/v1/auth/restablecer-contrasena`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+      cache: "no-store",
+    });
+  } catch {
+    throw new AuthError(
+      "No se pudo conectar con el servidor. Verificá tu conexión o que el backend esté corriendo.",
+      0,
+    );
+  }
+
+  if (!res.ok) {
+    let body: ApiErrorBody | null = null;
+    try {
+      body = (await res.json()) as ApiErrorBody;
+    } catch {
+      // el backend no devolvió JSON, seguimos con el mensaje genérico
+    }
+    throw new AuthError(
+      body?.message ?? "No se pudo restablecer la contraseña.",
+      res.status,
+      body?.details ?? null,
+    );
+  }
+}
+
 // Evita un JSON.parse innecesario cuando localStorage no cambió desde la
 // última lectura.
 let cachedRaw: string | null = null;
@@ -148,6 +230,15 @@ export function getSession(): Session | null {
     cachedSession = null;
   }
   return cachedSession;
+}
+
+// Actualiza los datos del usuario en la sesión guardada (ej: después de
+// editar el perfil), sin tener que volver a loguearse para que el header
+// refleje el cambio.
+export function updateSessionUsuario(patch: Partial<Usuario>) {
+  const session = getSession();
+  if (!session) return;
+  saveSession({ ...session, usuario: { ...session.usuario, ...patch } });
 }
 
 export function clearSession() {

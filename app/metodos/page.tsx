@@ -1,4 +1,5 @@
 import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import { MethodsDetail } from "@/components/sections/methods-detail";
 
 export default function MetodosPage() {
@@ -8,6 +9,7 @@ export default function MetodosPage() {
       <main className="flex-1">
         <MethodsDetail />
       </main>
+      <Footer />
     </>
   );
 }

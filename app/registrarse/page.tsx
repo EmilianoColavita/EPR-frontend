@@ -1,4 +1,5 @@
 import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import { RegisterForm } from "@/components/sections/register-form";
 
 export default function RegistrarsePage() {
@@ -8,6 +9,7 @@ export default function RegistrarsePage() {
       <main className="flex-1">
         <RegisterForm />
       </main>
+      <Footer />
     </>
   );
 }

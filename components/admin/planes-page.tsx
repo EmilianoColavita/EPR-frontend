@@ -90,7 +90,39 @@ export function PlanesPage() {
         )}
 
         {planes && planes.length > 0 && (
-          <div className="overflow-x-auto">
+          <div className="flex flex-col gap-3 md:hidden">
+            {planes.map((plan) => (
+              <div key={plan.id} className="rounded-xl border border-white/10 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-heading font-semibold text-foreground">{plan.nombre}</p>
+                    <p className="mt-1 font-heading text-sm font-light text-foreground/60">
+                      {plan.duracionDias} días · {formatPrecio(plan.precio)}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={plan.activo}
+                    disabled={togglingId === plan.id}
+                    onCheckedChange={(next) => handleToggle(plan, next)}
+                    ariaLabel={`${plan.activo ? "Desactivar" : "Activar"} el plan ${plan.nombre}`}
+                  />
+                </div>
+                <div className="mt-3 border-t border-white/10 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setModalPlan(plan)}
+                    className="font-heading text-sm text-epr-green hover:underline"
+                  >
+                    Editar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {planes && planes.length > 0 && (
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[560px] text-left">
               <thead>
                 <tr className="border-b border-white/10">

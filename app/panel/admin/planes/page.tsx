@@ -1,10 +1,10 @@
 import { AdminShell } from "@/components/admin/admin-shell";
-import { PlanesPage } from "@/components/admin/planes-page";
+import { PlanesShell } from "@/components/admin/planes-shell";
 
 export default function AdminPlanesPage() {
   return (
     <AdminShell>
-      <PlanesPage />
+      <PlanesShell />
     </AdminShell>
   );
 }

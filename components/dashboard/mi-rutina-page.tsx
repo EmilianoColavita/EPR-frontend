@@ -6,6 +6,8 @@ import { useRequireRole } from "@/lib/use-require-role";
 import { getSession } from "@/lib/auth";
 import { getMiRutina, seleccionarDia, type Rutina } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { EjercicioStats } from "@/components/ui/ejercicio-stats";
+import { EjercicioVideoButton } from "@/components/ui/ejercicio-video-button";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardCard } from "./dashboard-card";
 
@@ -133,31 +135,41 @@ export function MiRutinaPage() {
               )}
 
               <div className="mt-4">
-                {diaSeleccionado?.ejercicios.length === 0 && (
+                {diaSeleccionado?.bloques.length === 0 && (
                   <p className="font-heading font-light text-foreground/50">
                     Este día todavía no tiene ejercicios cargados.
                   </p>
                 )}
-                {diaSeleccionado?.ejercicios.map((ejercicio, index) => (
-                  <div
-                    key={ejercicio.id}
-                    className="flex items-center gap-4 border-b border-white/10 py-4 first:pt-0 last:border-b-0 last:pb-0"
-                  >
-                    <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg border border-white/15 font-heading text-lg text-foreground/70">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="h-8 w-px shrink-0 bg-white/10" />
-                    <span className="flex-1 font-heading font-bold uppercase tracking-tight text-foreground">
-                      {ejercicio.nombre}
-                    </span>
-                    <span className="text-right font-heading font-light text-foreground/60">
-                      {[
-                        ejercicio.series && `${ejercicio.series} series`,
-                        ejercicio.repeticiones && `x ${ejercicio.repeticiones}`,
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    </span>
+                {diaSeleccionado?.bloques.map((bloque) => (
+                  <div key={bloque.id} className="mb-5 last:mb-0">
+                    <p className="font-heading text-xs font-light uppercase tracking-widest text-foreground/50">
+                      {bloque.nombre || `Bloque ${bloque.numero}`}
+                    </p>
+                    {bloque.ejercicios.length === 0 && (
+                      <p className="mt-2 font-heading font-light text-foreground/50">
+                        Sin ejercicios cargados.
+                      </p>
+                    )}
+                    {bloque.ejercicios.map((ejercicio, index) => (
+                      <div
+                        key={ejercicio.id}
+                        className="flex items-start gap-4 border-b border-white/10 py-4 first:pt-2 last:border-b-0 last:pb-0"
+                      >
+                        <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg border border-white/15 font-heading text-lg text-foreground/70">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span className="mt-1 h-8 w-px shrink-0 bg-white/10" />
+                        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-heading font-bold uppercase tracking-tight text-foreground">
+                              {ejercicio.nombre}
+                            </span>
+                            <EjercicioVideoButton url={ejercicio.videoUrl} />
+                          </div>
+                          <EjercicioStats ejercicio={ejercicio} className="sm:justify-end" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>

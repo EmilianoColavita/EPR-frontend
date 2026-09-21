@@ -254,7 +254,7 @@ export function AlumnoHorarioPage({ alumnoId }: { alumnoId: number }) {
                     onClick={() => removeFranja(index)}
                     aria-label="Eliminar franja"
                     disabled={saving}
-                    className="shrink-0 self-center text-foreground/40 transition-colors hover:text-red-400 disabled:opacity-50 sm:mb-2"
+                    className="-m-2 shrink-0 self-center p-2 text-foreground/40 transition-colors hover:text-red-400 disabled:opacity-50 sm:mb-2"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

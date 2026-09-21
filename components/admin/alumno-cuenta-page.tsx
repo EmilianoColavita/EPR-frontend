@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { CheckCircle2, CircleAlert, Download } from "lucide-react";
+import Link from "next/link";
+import { Award, CheckCircle2, CircleAlert, Download } from "lucide-react";
 
 import { getSession, type Usuario } from "@/lib/auth";
 import {
@@ -21,7 +22,8 @@ import {
   type PlanCuota,
 } from "@/lib/api";
 import { descargarBlob } from "@/lib/download";
-import { formatDateShort } from "@/lib/format";
+import { diasDesde, esVencido, formatDateShort } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DashboardCard, DashboardCardIcon } from "@/components/dashboard/dashboard-card";
 
@@ -154,6 +156,9 @@ export function AlumnoCuentaPage({ alumnoId }: { alumnoId: number }) {
     );
   }
 
+  const becado = cuenta?.becado ?? false;
+  const vencido =
+    !becado && cuenta != null && !cuenta.alDia && esVencido(cuenta.fechaVencimiento);
   const planesActivos = (planes ?? []).filter((p) => p.activo);
   const pagosOrdenados = (pagos ?? []).slice().sort((a, b) => b.id - a.id);
   const pendiente = (comprobantes ?? []).find((c) => c.estado === "PENDIENTE");
@@ -175,9 +180,16 @@ export function AlumnoCuentaPage({ alumnoId }: { alumnoId: number }) {
         Cuenta
       </h1>
 
-      <DashboardCard className="mt-6 flex items-start gap-5">
+      <DashboardCard
+        className={cn(
+          "mt-6 flex items-start gap-5",
+          vencido && "border-red-500/40 bg-red-500/5",
+        )}
+      >
         <DashboardCardIcon>
-          {cuenta?.alDia ? (
+          {becado ? (
+            <Award className="h-6 w-6" />
+          ) : cuenta?.alDia ? (
             <CheckCircle2 className="h-6 w-6" />
           ) : (
             <CircleAlert className="h-6 w-6" />
@@ -187,20 +199,53 @@ export function AlumnoCuentaPage({ alumnoId }: { alumnoId: number }) {
           <p className="font-heading text-sm uppercase tracking-widest text-foreground/60">
             Estado actual
           </p>
-          <p className="mt-2 font-heading text-2xl font-bold uppercase tracking-tight text-foreground">
-            {cuenta?.alDia ? "Al día" : "Pendiente"}
+          <p
+            className={cn(
+              "mt-2 font-heading text-2xl font-bold uppercase tracking-tight",
+              becado || cuenta?.alDia
+                ? "text-epr-green"
+                : vencido
+                  ? "text-red-500"
+                  : "text-red-400",
+            )}
+          >
+            {becado ? "Becado" : cuenta?.alDia ? "Al día" : vencido ? "Vencido" : "Pendiente"}
           </p>
-          <p className="font-heading font-light text-foreground/60">
-            {cuenta?.planActual
-              ? `Plan ${cuenta.planActual.nombre}`
-              : "Sin plan asignado todavía"}
-            {cuenta?.fechaVencimiento &&
-              ` · Vence el ${formatDateShort(cuenta.fechaVencimiento)}`}
-          </p>
+          {!becado && (
+            <p
+              className={cn(
+                "font-heading font-light",
+                vencido ? "text-red-400/90" : "text-foreground/60",
+              )}
+            >
+              {vencido && cuenta?.fechaVencimiento
+                ? `Hace ${diasDesde(cuenta.fechaVencimiento)} días que está vencido`
+                : cuenta?.planActual
+                  ? `Plan ${cuenta.planActual.nombre}`
+                  : "Sin plan asignado todavía"}
+              {!vencido &&
+                cuenta?.fechaVencimiento &&
+                ` · Vence el ${formatDateShort(cuenta.fechaVencimiento)}`}
+            </p>
+          )}
         </div>
       </DashboardCard>
 
-      {pendiente && (
+      {becado && (
+        <DashboardCard className="mt-6">
+          <p className="font-heading font-light text-foreground/70">
+            Este alumno es becado y queda exento del sistema de cuotas.
+          </p>
+          <Link
+            href={`/panel/admin/alumnos/${alumnoId}/beca`}
+            className="mt-3 inline-flex items-center gap-1.5 font-heading text-sm text-epr-green hover:underline"
+          >
+            Ver beca
+          </Link>
+        </DashboardCard>
+      )}
+
+      {!becado && pendiente && (
         <ComprobantePendienteCard
           alumnoId={alumnoId}
           comprobante={pendiente}
@@ -209,6 +254,8 @@ export function AlumnoCuentaPage({ alumnoId }: { alumnoId: number }) {
         />
       )}
 
+      {!becado && (
+      <>
       <DashboardCard className="mt-6">
         <h2 className="font-heading text-lg font-bold uppercase tracking-tight text-foreground">
           Registrar pago
@@ -371,6 +418,8 @@ export function AlumnoCuentaPage({ alumnoId }: { alumnoId: number }) {
             ))}
           </div>
         </DashboardCard>
+      )}
+      </>
       )}
     </div>
   );

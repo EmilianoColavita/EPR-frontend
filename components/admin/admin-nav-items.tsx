@@ -4,7 +4,8 @@ import {
   ClipboardList,
   Dumbbell,
   HelpCircle,
-  Tag,
+  Inbox,
+  Layers,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -21,6 +22,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: "/panel/admin/rutinas", label: "Rutinas", icon: Dumbbell },
   { href: "/panel/admin/turnos", label: "Turnos/Agenda", icon: CalendarDays },
   { href: "/panel/admin/evaluaciones", label: "Evaluaciones", icon: ClipboardList },
-  { href: "/panel/admin/planes", label: "Plan", icon: Tag },
+  { href: "/panel/admin/solicitudes", label: "Solicitudes", icon: Inbox },
+  { href: "/panel/admin/planes", label: "Plan", icon: Layers },
   { href: "/panel/admin/configuracion", label: "Configuración", icon: HelpCircle },
 ];

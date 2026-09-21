@@ -83,7 +83,7 @@ export function NuevoAlumnoModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md overflow-y-auto rounded-3xl border border-epr-green/30 bg-epr-card p-6 sm:p-8"
+        className="flex max-h-[85vh] w-full max-w-md flex-col overflow-y-auto rounded-3xl border border-epr-green/30 bg-epr-card p-6 sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -101,7 +101,7 @@ export function NuevoAlumnoModal({
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Nombre">
               <input
                 required

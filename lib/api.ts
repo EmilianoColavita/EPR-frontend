@@ -5,6 +5,9 @@ export type PlanCard = {
   title: string;
   items: string[];
   price?: number;
+  // Solo vienen en las respuestas de admin (/planes/todos, POST/PUT).
+  orden?: number | null;
+  activo?: boolean | null;
 };
 
 export type PlanGroup = {
@@ -12,6 +15,9 @@ export type PlanGroup = {
   title: string;
   cards: PlanCard[];
   note?: string[];
+  // Solo vienen en las respuestas de admin (/planes/todos, POST/PUT).
+  orden?: number | null;
+  activo?: boolean | null;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -39,6 +45,71 @@ export async function getPlanGroups(): Promise<PlanGroup[] | null> {
     console.error("No se pudo conectar con el backend:", error);
     return null;
   }
+}
+
+// --- ABM de planes públicos (para el panel de admin) ---
+
+export type PlanCategoriaInput = {
+  titulo: string;
+  orden?: number;
+  activo?: boolean;
+  notas?: string[];
+};
+
+export type PlanCardInput = {
+  titulo: string;
+  orden?: number;
+  activo?: boolean;
+  precio?: number;
+  items?: string[];
+};
+
+export async function listPlanesTodos(token: string): Promise<PlanGroup[] | null> {
+  return authGet<PlanGroup[]>("/api/v1/planes/todos", token);
+}
+
+export async function crearPlanCategoria(
+  token: string,
+  input: PlanCategoriaInput,
+): Promise<PlanGroup> {
+  return authMutate<PlanGroup>("/api/v1/planes/categorias", "POST", token, input);
+}
+
+export async function actualizarPlanCategoria(
+  token: string,
+  id: number,
+  input: PlanCategoriaInput,
+): Promise<PlanGroup> {
+  return authMutate<PlanGroup>(`/api/v1/planes/categorias/${id}`, "PUT", token, input);
+}
+
+export async function eliminarPlanCategoria(token: string, id: number): Promise<void> {
+  return authDelete(`/api/v1/planes/categorias/${id}`, token);
+}
+
+export async function crearPlanCard(
+  token: string,
+  categoriaId: number,
+  input: PlanCardInput,
+): Promise<PlanCard> {
+  return authMutate<PlanCard>(
+    `/api/v1/planes/categorias/${categoriaId}/cards`,
+    "POST",
+    token,
+    input,
+  );
+}
+
+export async function actualizarPlanCard(
+  token: string,
+  id: number,
+  input: PlanCardInput,
+): Promise<PlanCard> {
+  return authMutate<PlanCard>(`/api/v1/planes/cards/${id}`, "PUT", token, input);
+}
+
+export async function eliminarPlanCard(token: string, id: number): Promise<void> {
+  return authDelete(`/api/v1/planes/cards/${id}`, token);
 }
 
 // Helper para endpoints autenticados (requieren el JWT del login en el
@@ -78,6 +149,7 @@ async function authGet<T>(path: string, token: string): Promise<T | null> {
 export type EstadoCuenta = {
   alDia: boolean;
   proximoVencimiento: string | null; // ISO YYYY-MM-DD
+  becado: boolean;
 };
 
 export async function getEstadoCuenta(token: string): Promise<EstadoCuenta | null> {
@@ -128,6 +200,37 @@ async function parseApiError(res: Response): Promise<ApiError> {
     res.status,
     body?.details ?? null,
   );
+}
+
+// Helper para POST/PUT públicos (sin JWT) con body JSON, para los pocos
+// endpoints que se llaman antes de tener sesión (ej: reservar una
+// evaluación). Mismo manejo de errores que authMutate.
+async function publicMutate<T>(
+  path: string,
+  method: "POST" | "PUT",
+  body: unknown,
+): Promise<T> {
+  if (!API_URL) {
+    throw new ApiError("NEXT_PUBLIC_API_URL no está configurada.", 0);
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+  } catch {
+    throw new ApiError("No se pudo conectar con el servidor.", 0);
+  }
+
+  if (!res.ok) {
+    throw await parseApiError(res);
+  }
+
+  return (await res.json()) as T;
 }
 
 // Helper para POST/PUT/PATCH autenticados con body JSON. A diferencia de
@@ -217,13 +320,21 @@ export type Ejercicio = {
   descansoSegundos: number | null;
   notas: string | null;
   orden: number;
+  videoUrl: string | null;
+};
+
+export type BloqueRutina = {
+  id: number;
+  numero: number;
+  nombre: string | null;
+  ejercicios: Ejercicio[];
 };
 
 export type DiaRutina = {
   id: number;
   numero: number;
   nombre: string | null;
-  ejercicios: Ejercicio[];
+  bloques: BloqueRutina[];
 };
 
 export type Rutina = {
@@ -243,12 +354,19 @@ export type EjercicioInput = {
   descansoSegundos?: number;
   notas?: string;
   orden: number;
+  videoUrl?: string;
+};
+
+export type BloqueRutinaInput = {
+  numero: number;
+  nombre?: string;
+  ejercicios: EjercicioInput[];
 };
 
 export type DiaRutinaInput = {
   numero: number;
   nombre?: string;
-  ejercicios: EjercicioInput[];
+  bloques: BloqueRutinaInput[];
 };
 
 export type RutinaInput = {
@@ -724,6 +842,7 @@ export type CuentaAlumno = {
   planActual: PlanCuota | null;
   fechaVencimiento: string | null;
   alDia: boolean;
+  becado: boolean;
 };
 
 export async function getCuentaAlumno(
@@ -870,4 +989,239 @@ export async function listComprobantesPendientes(
   token: string,
 ): Promise<ComprobantePago[] | null> {
   return authGet<ComprobantePago[]>("/api/v1/comprobantes-pago?estado=PENDIENTE", token);
+}
+
+// --- Becas (un alumno becado queda exento del sistema de Cuenta/Pago) ---
+
+export type EstadoBeca = "ACTIVA" | "FINALIZADA";
+
+export type NotaBeca = {
+  id: number;
+  fecha: string;
+  texto: string;
+};
+
+export type Beca = {
+  id: number;
+  alumno: {
+    id: number;
+    nombre: string;
+    apellido: string;
+  };
+  fechaInicio: string;
+  fechaFinalizacion: string | null;
+  estado: EstadoBeca;
+  notas: NotaBeca[];
+};
+
+async function fetchBeca(path: string, token: string): Promise<Beca | "sin-beca" | null> {
+  if (!API_URL) {
+    console.error("NEXT_PUBLIC_API_URL no está configurada.");
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (res.status === 401) {
+      handleUnauthorized();
+      return null;
+    }
+
+    if (res.status === 404) return "sin-beca";
+
+    if (!res.ok) {
+      console.error(`GET ${path} respondió ${res.status}`);
+      return null;
+    }
+
+    return (await res.json()) as Beca;
+  } catch (error) {
+    console.error(`No se pudo conectar con el backend (${path}):`, error);
+    return null;
+  }
+}
+
+export async function getBecaAlumno(
+  token: string,
+  alumnoId: number,
+): Promise<Beca | "sin-beca" | null> {
+  return fetchBeca(`/api/v1/alumnos/${alumnoId}/beca`, token);
+}
+
+export async function getMiBeca(token: string): Promise<Beca | "sin-beca" | null> {
+  return fetchBeca("/api/v1/becas/mia", token);
+}
+
+export async function otorgarBeca(
+  token: string,
+  alumnoId: number,
+  fechaInicio?: string,
+): Promise<Beca> {
+  return authMutate<Beca>(`/api/v1/alumnos/${alumnoId}/beca`, "POST", token, {
+    fechaInicio,
+  });
+}
+
+export async function agregarNotaBeca(
+  token: string,
+  alumnoId: number,
+  texto: string,
+): Promise<Beca> {
+  return authMutate<Beca>(`/api/v1/alumnos/${alumnoId}/beca/notas`, "POST", token, {
+    texto,
+  });
+}
+
+export async function finalizarBeca(
+  token: string,
+  alumnoId: number,
+  fechaFinalizacion?: string,
+): Promise<Beca> {
+  return authMutate<Beca>(`/api/v1/alumnos/${alumnoId}/beca/finalizar`, "POST", token, {
+    fechaFinalizacion,
+  });
+}
+
+// --- Solicitudes de evaluación (formulario público "Reservar evaluación") ---
+
+export type EstadoSolicitudEvaluacion = "PENDIENTE" | "CONTACTADO" | "COMPLETADA";
+
+export type SolicitudEvaluacion = {
+  id: number;
+  nombreCompleto: string;
+  email: string;
+  telefono: string | null;
+  objetivo: string | null;
+  fechaPreferida: string | null;
+  estado: EstadoSolicitudEvaluacion;
+  fechaSolicitud: string;
+};
+
+export type SolicitudEvaluacionInput = {
+  nombreCompleto: string;
+  email: string;
+  telefono?: string;
+  objetivo?: string;
+  fechaPreferida?: string;
+};
+
+// Público, no requiere sesión: lo llama cualquiera desde el botón
+// "Reservar evaluación" del home, sin necesidad de tener cuenta.
+export async function crearSolicitudEvaluacion(
+  input: SolicitudEvaluacionInput,
+): Promise<SolicitudEvaluacion> {
+  return publicMutate<SolicitudEvaluacion>("/api/v1/evaluaciones", "POST", input);
+}
+
+// ADMIN/ENTRENADOR — gestión de las solicitudes desde el panel.
+export async function listSolicitudesEvaluacion(
+  token: string,
+): Promise<SolicitudEvaluacion[] | null> {
+  return authGet<SolicitudEvaluacion[]>("/api/v1/evaluaciones", token);
+}
+
+export async function actualizarEstadoSolicitud(
+  token: string,
+  id: number,
+  estado: EstadoSolicitudEvaluacion,
+): Promise<SolicitudEvaluacion> {
+  return authMutate<SolicitudEvaluacion>(`/api/v1/evaluaciones/${id}/estado`, "PUT", token, {
+    estado,
+  });
+}
+
+export async function eliminarSolicitud(token: string, id: number): Promise<void> {
+  return authDelete(`/api/v1/evaluaciones/${id}`, token);
+}
+
+// --- Notificaciones (avisos puntuales para el alumno, ej: pago confirmado) ---
+
+export type Notificacion = {
+  id: number;
+  titulo: string;
+  mensaje: string;
+  href: string | null;
+  leida: boolean;
+  fecha: string;
+};
+
+export async function misNotificaciones(token: string): Promise<Notificacion[] | null> {
+  return authGet<Notificacion[]>("/api/v1/notificaciones/mias", token);
+}
+
+export async function marcarNotificacionLeida(
+  token: string,
+  id: number,
+): Promise<Notificacion> {
+  return authMutate<Notificacion>(
+    `/api/v1/notificaciones/mias/${id}/leida`,
+    "POST",
+    token,
+    {},
+  );
+}
+
+export async function marcarTodasLasNotificacionesLeidas(token: string): Promise<void> {
+  await authMutate<unknown>("/api/v1/notificaciones/mias/leer-todas", "POST", token, {});
+}
+
+// --- Mi perfil (datos personales y foto del usuario logueado, cualquier rol) ---
+
+export type ActualizarPerfilInput = {
+  nombre: string;
+  apellido: string;
+  telefono?: string;
+};
+
+export async function actualizarMiPerfil(
+  token: string,
+  input: ActualizarPerfilInput,
+): Promise<Usuario> {
+  return authMutate<Usuario>("/api/v1/usuarios/mi-perfil", "PUT", token, input);
+}
+
+export async function subirFotoPerfil(token: string, archivo: File): Promise<Usuario> {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+  return authUpload<Usuario>("/api/v1/usuarios/mi-perfil/foto", token, formData);
+}
+
+export async function eliminarFotoPerfil(token: string): Promise<void> {
+  return authDelete("/api/v1/usuarios/mi-perfil/foto", token);
+}
+
+// A diferencia de authDownload, un 404 acá es un estado normal (todavía no
+// subió ninguna foto) y no un error — no lo logueamos como tal.
+export async function descargarMiFotoPerfil(token: string): Promise<Blob | null> {
+  if (!API_URL) {
+    console.error("NEXT_PUBLIC_API_URL no está configurada.");
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/api/v1/usuarios/mi-perfil/foto`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (res.status === 401) {
+      handleUnauthorized();
+      return null;
+    }
+    if (res.status === 404) return null;
+
+    if (!res.ok) {
+      console.error(`GET /api/v1/usuarios/mi-perfil/foto respondió ${res.status}`);
+      return null;
+    }
+
+    return await res.blob();
+  } catch (error) {
+    console.error("No se pudo conectar con el backend (foto de perfil):", error);
+    return null;
+  }
 }

@@ -7,6 +7,7 @@ import { ArrowRight, Dumbbell } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { getMiRutina, seleccionarDia, type Rutina } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import { DashboardCard, DashboardCardIcon } from "./dashboard-card";
 
 export function TodayRoutineCard() {
@@ -126,45 +127,41 @@ export function TodayRoutineCard() {
                 Día sugerido
               </p>
             )}
-
-            <Link
-              href="/panel/alumno/rutina"
-              className="mt-4 inline-flex items-center gap-1 font-heading text-sm text-epr-green hover:underline"
-            >
-              Ver rutina completa
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
           </div>
         </div>
 
         <div className="flex-1 sm:max-w-xl">
-          {diaSeleccionado?.ejercicios.length === 0 && (
+          {diaSeleccionado?.bloques.length === 0 && (
             <p className="font-heading font-light text-foreground/50">
               Este día todavía no tiene ejercicios cargados.
             </p>
           )}
-          {diaSeleccionado?.ejercicios.map((ejercicio, index) => (
-            <div
-              key={ejercicio.id}
-              className="flex items-center gap-4 border-b border-white/10 py-4 first:pt-0 last:border-b-0 last:pb-0"
-            >
-              <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg border border-white/15 font-heading text-lg text-foreground/70">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className="h-8 w-px shrink-0 bg-white/10" />
-              <span className="flex-1 font-heading font-bold uppercase tracking-tight text-foreground">
-                {ejercicio.nombre}
-              </span>
-              <span className="text-right font-heading font-light text-foreground/60">
-                {[
-                  ejercicio.series && `${ejercicio.series} series`,
-                  ejercicio.repeticiones && `x ${ejercicio.repeticiones}`,
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              </span>
+          {diaSeleccionado && diaSeleccionado.bloques.length > 0 && (
+            <div className="flex flex-col gap-2">
+              {diaSeleccionado.bloques.map((bloque) => (
+                <div
+                  key={bloque.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/10 px-4 py-3"
+                >
+                  <span className="font-heading font-semibold text-foreground">
+                    {bloque.nombre || `Bloque ${bloque.numero}`}
+                  </span>
+                  <span className="font-heading text-sm font-light text-foreground/50">
+                    {bloque.ejercicios.length}{" "}
+                    {bloque.ejercicios.length === 1 ? "ejercicio" : "ejercicios"}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
+
+          <Link
+            href="/panel/alumno/rutina"
+            className={cn(buttonVariants({ variant: "outline", font: "heading" }), "mt-5 w-full")}
+          >
+            Ver rutina completa
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </DashboardCard>

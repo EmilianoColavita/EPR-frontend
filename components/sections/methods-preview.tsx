@@ -12,10 +12,10 @@ export function MethodsPreview() {
   return (
     <section className="relative overflow-hidden bg-epr-dark py-20 sm:py-28">
       <div
-        className="absolute inset-0 scale-110 bg-cover bg-center blur-2xl"
+        className="absolute inset-0 scale-110 bg-cover bg-center blur-md"
         style={{ backgroundImage: "url('/images/fondoEPR5.png')" }}
       />
-      <div className="absolute inset-0 bg-epr-dark/85" />
+      <div className="absolute inset-0 bg-epr-dark/70" />
 
       <motion.div
         className="relative mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 sm:px-6 lg:grid-cols-12 lg:px-10"
