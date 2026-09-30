@@ -36,8 +36,10 @@ export function Header() {
 
   function handleLogout() {
     clearSession();
-    // Recarga la página para que toda la vista (no solo este header) refleje
-    // que ya no hay sesión, igual que el logout dentro del panel.
+    // Recarga la página a propósito (no router.push) para que toda la vista
+    // (no solo este header) refleje que ya no hay sesión, igual que el logout
+    // dentro del panel.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = "/";
   }
 

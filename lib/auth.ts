@@ -254,6 +254,10 @@ export function clearSession() {
 export function handleUnauthorized() {
   clearSession();
   if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+    // Se llama desde helpers planos de lib/api.ts, fuera de un componente, así
+    // que no hay useRouter() disponible acá: window.location es la única forma
+    // de redirigir en este contexto.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = "/login";
   }
 }
