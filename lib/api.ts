@@ -464,6 +464,13 @@ export async function asignarRutina(
   );
 }
 
+export async function quitarRutinaAlumno(
+  token: string,
+  alumnoId: number,
+): Promise<void> {
+  return authDelete(`/api/v1/alumnos/${alumnoId}/rutina`, token);
+}
+
 // ALUMNO
 export async function getMiRutina(
   token: string,
@@ -791,6 +798,70 @@ export async function descargarMiEvaluacion(
   evaluacionId: number,
 ): Promise<Blob | null> {
   return authDownload(`/api/v1/evaluaciones/mias/${evaluacionId}/archivo`, token);
+}
+
+// --- Rutinas en PDF (alternativa/complemento a la rutina armada en la app) ---
+
+export type RutinaPdf = {
+  id: number;
+  alumno: {
+    id: number;
+    nombre: string;
+    apellido: string;
+  };
+  nombreArchivo: string;
+  fechaSubida: string; // ISO date
+};
+
+export async function listRutinasPdfAlumno(
+  token: string,
+  alumnoId: number,
+): Promise<RutinaPdf[] | null> {
+  return authGet<RutinaPdf[]>(`/api/v1/alumnos/${alumnoId}/rutinas-pdf`, token);
+}
+
+export async function subirRutinaPdf(
+  token: string,
+  alumnoId: number,
+  archivo: File,
+): Promise<RutinaPdf> {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+  return authUpload<RutinaPdf>(
+    `/api/v1/alumnos/${alumnoId}/rutinas-pdf`,
+    token,
+    formData,
+  );
+}
+
+export async function descargarRutinaPdf(
+  token: string,
+  alumnoId: number,
+  rutinaPdfId: number,
+): Promise<Blob | null> {
+  return authDownload(
+    `/api/v1/alumnos/${alumnoId}/rutinas-pdf/${rutinaPdfId}/archivo`,
+    token,
+  );
+}
+
+export async function eliminarRutinaPdf(
+  token: string,
+  alumnoId: number,
+  rutinaPdfId: number,
+): Promise<void> {
+  return authDelete(`/api/v1/alumnos/${alumnoId}/rutinas-pdf/${rutinaPdfId}`, token);
+}
+
+export async function misRutinasPdf(token: string): Promise<RutinaPdf[] | null> {
+  return authGet<RutinaPdf[]>("/api/v1/rutinas-pdf/mias", token);
+}
+
+export async function descargarMiRutinaPdf(
+  token: string,
+  rutinaPdfId: number,
+): Promise<Blob | null> {
+  return authDownload(`/api/v1/rutinas-pdf/mias/${rutinaPdfId}/archivo`, token);
 }
 
 // --- Cuenta / pagos (plan de membresía, distinto del Plan de la web pública) ---

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Dumbbell } from "lucide-react";
 
 import { getSession } from "@/lib/auth";
-import { getMiRutina, seleccionarDia, type Rutina } from "@/lib/api";
+import { getMiRutina, misRutinasPdf, seleccionarDia, type Rutina } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardCard, DashboardCardIcon } from "./dashboard-card";
@@ -17,6 +17,7 @@ export function TodayRoutineCard() {
   );
   const [selectedDiaId, setSelectedDiaId] = useState<number | null>(null);
   const [switching, setSwitching] = useState(false);
+  const [tienePdf, setTienePdf] = useState(false);
 
   useEffect(() => {
     const session = getSession();
@@ -27,6 +28,7 @@ export function TodayRoutineCard() {
         setSelectedDiaId(result.diaSugeridoId ?? result.dias[0]?.id ?? null);
       }
     });
+    misRutinasPdf(session.token).then((result) => setTienePdf(!!result?.length));
   }, []);
 
   async function handleSelectDia(diaId: number) {
@@ -67,19 +69,32 @@ export function TodayRoutineCard() {
 
   if (rutina === "sin-rutina") {
     return (
-      <DashboardCard className="flex items-start gap-5">
-        <DashboardCardIcon>
-          <Dumbbell className="h-6 w-6" />
-        </DashboardCardIcon>
-        <div>
-          <p className="font-heading text-sm uppercase tracking-widest text-foreground/60">
-            Rutina de hoy
-          </p>
-          <p className="mt-2 font-heading font-light text-foreground/60">
-            Todavía no tenés una rutina asignada. Tu entrenador te la va a
-            cargar pronto.
-          </p>
+      <DashboardCard className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-5">
+          <DashboardCardIcon>
+            <Dumbbell className="h-6 w-6" />
+          </DashboardCardIcon>
+          <div>
+            <p className="font-heading text-sm uppercase tracking-widest text-foreground/60">
+              Rutina de hoy
+            </p>
+            <p className="mt-2 font-heading font-light text-foreground/60">
+              {tienePdf
+                ? "Tu entrenador te cargó tu rutina en PDF."
+                : "Todavía no tenés una rutina asignada. Tu entrenador te la va a cargar pronto."}
+            </p>
+          </div>
         </div>
+
+        {tienePdf && (
+          <Link
+            href="/panel/alumno/rutina"
+            className={buttonVariants({ variant: "outline", font: "heading" })}
+          >
+            Ver rutina completa
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        )}
       </DashboardCard>
     );
   }

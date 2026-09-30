@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Eye, FileText } from "lucide-react";
 
 import { useRequireRole } from "@/lib/use-require-role";
 import { getSession } from "@/lib/auth";
-import { getMiRutina, seleccionarDia, type Rutina } from "@/lib/api";
+import {
+  descargarMiRutinaPdf,
+  getMiRutina,
+  misRutinasPdf,
+  seleccionarDia,
+  type Rutina,
+  type RutinaPdf,
+} from "@/lib/api";
+import { verBlobEnNuevaPestana } from "@/lib/download";
+import { formatDateShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { EjercicioStats } from "@/components/ui/ejercicio-stats";
 import { EjercicioVideoButton } from "@/components/ui/ejercicio-video-button";
 import { DashboardHeader } from "./dashboard-header";
-import { DashboardCard } from "./dashboard-card";
+import { DashboardCard, DashboardCardIcon } from "./dashboard-card";
 
 function LoadingState() {
   return (
@@ -28,6 +38,12 @@ export function MiRutinaPage() {
   const [selectedDiaId, setSelectedDiaId] = useState<number | null>(null);
   const [switching, setSwitching] = useState(false);
 
+  // undefined = cargando, null = error
+  const [rutinasPdf, setRutinasPdf] = useState<RutinaPdf[] | null | undefined>(
+    undefined,
+  );
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
   useEffect(() => {
     if (!usuario) return;
     const session = getSession();
@@ -38,7 +54,26 @@ export function MiRutinaPage() {
         setSelectedDiaId(result.diaSugeridoId ?? result.dias[0]?.id ?? null);
       }
     });
+    misRutinasPdf(session.token).then(setRutinasPdf);
   }, [usuario]);
+
+  async function handleVerPdf(rutinaPdf: RutinaPdf) {
+    const session = getSession();
+    if (!session) return;
+
+    const ventana = window.open("", "_blank");
+    setDownloadingId(rutinaPdf.id);
+    try {
+      const blob = await descargarMiRutinaPdf(session.token, rutinaPdf.id);
+      if (blob) {
+        verBlobEnNuevaPestana(ventana, blob);
+      } else {
+        ventana?.close();
+      }
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   async function handleSelectDia(diaId: number) {
     if (diaId === selectedDiaId) return;
@@ -90,7 +125,7 @@ export function MiRutinaPage() {
             </DashboardCard>
           )}
 
-          {rutina === "sin-rutina" && (
+          {rutina === "sin-rutina" && rutinasPdf !== undefined && !rutinasPdf?.length && (
             <DashboardCard className="mt-6">
               <p className="font-heading font-light text-foreground/60">
                 Todavía no tenés una rutina asignada. Tu entrenador te la va a
@@ -172,6 +207,59 @@ export function MiRutinaPage() {
                     ))}
                   </div>
                 ))}
+              </div>
+            </DashboardCard>
+          )}
+
+          {rutinasPdf && rutinasPdf.length > 0 && (
+            <DashboardCard className="mt-6">
+              <div className="flex items-start gap-5">
+                <DashboardCardIcon>
+                  <FileText className="h-6 w-6" />
+                </DashboardCardIcon>
+                <div>
+                  <p className="font-heading text-sm uppercase tracking-widest text-foreground/60">
+                    Rutina en PDF
+                  </p>
+                  <p className="mt-2 font-heading font-light text-foreground/60">
+                    Tu entrenador también te cargó tu rutina en formato PDF.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-col gap-3 border-t border-white/10 pt-5">
+                {rutinasPdf
+                  .slice()
+                  .sort((a, b) => b.id - a.id)
+                  .map((rutinaPdf, index) => (
+                    <div
+                      key={rutinaPdf.id}
+                      className="flex flex-wrap items-center justify-between gap-3"
+                    >
+                      <div>
+                        <p className="font-heading font-semibold text-foreground">
+                          {rutinaPdf.nombreArchivo}
+                        </p>
+                        <p className="font-heading text-sm font-light text-foreground/60">
+                          {formatDateShort(rutinaPdf.fechaSubida)}
+                          {index === 0 && (
+                            <span className="ml-2 rounded-full border border-epr-green/50 px-2 py-0.5 text-xs uppercase text-epr-green">
+                              Última
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={downloadingId === rutinaPdf.id}
+                        onClick={() => handleVerPdf(rutinaPdf)}
+                        className="flex items-center gap-1.5 rounded-full border border-epr-green/60 px-4 py-2 font-heading text-sm text-epr-green transition-colors hover:bg-epr-green/10 disabled:opacity-50"
+                      >
+                        <Eye className="h-4 w-4" />
+                        {downloadingId === rutinaPdf.id ? "Abriendo..." : "Ver"}
+                      </button>
+                    </div>
+                  ))}
               </div>
             </DashboardCard>
           )}
