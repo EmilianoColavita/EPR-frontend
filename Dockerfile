@@ -12,6 +12,10 @@ COPY . .
 # Se define en tiempo de build en Dokploy (URL pública del backend en prod).
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Next incrusta esta URL al compilar: si falta, el sitio queda sin poder
+# hablar con el backend. Mejor que el build falle a que salga roto.
+RUN test -n "$NEXT_PUBLIC_API_URL" \
+  || (echo "ERROR: falta el build arg NEXT_PUBLIC_API_URL" && exit 1)
 RUN npm run build
 
 # --- runner: imagen final, liviana, sin devDependencies ni código fuente ---

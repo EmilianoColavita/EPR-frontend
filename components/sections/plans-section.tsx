@@ -8,10 +8,8 @@ export async function PlansSection({ showCta = true }: { showCta?: boolean }) {
     return (
       <section className="bg-epr-dark px-4 py-24 text-center">
         <p className="mx-auto max-w-md font-heading font-light text-foreground/60">
-          No se pudieron cargar los planes. Verificá que el backend esté
-          corriendo (
-          {process.env.NEXT_PUBLIC_API_URL ?? "NEXT_PUBLIC_API_URL sin configurar"}
-          ).
+          No pudimos cargar los planes en este momento. Probá de nuevo en unos
+          minutos.
         </p>
       </section>
     );
