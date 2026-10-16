@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRequireRole } from "@/lib/use-require-role";
 import { getSession } from "@/lib/auth";
 import { misTurnos, type EstadoTurno, type Turno } from "@/lib/api";
-import { formatDateShort } from "@/lib/format";
+import { formatDateShort, formatHorario } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardCard } from "./dashboard-card";
@@ -84,8 +84,7 @@ export function MisTurnosPage() {
                         {formatDateShort(turno.fecha)}
                       </p>
                       <p className="font-heading text-epr-green">
-                        {turno.horaInicio}
-                        {turno.horaFin && `–${turno.horaFin}`}
+                        {formatHorario(turno.horaInicio, turno.horaFin)}
                       </p>
                     </div>
                     <p className="flex-1 font-heading font-semibold text-foreground">

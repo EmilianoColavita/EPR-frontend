@@ -7,6 +7,7 @@ import { CalendarClock } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { listTurnos, type Turno } from "@/lib/api";
 import { toDateKey } from "@/lib/calendar";
+import { formatHora } from "@/lib/format";
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 
@@ -67,7 +68,7 @@ export function UpcomingSessionsCard() {
             className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-white/10 py-3 last:border-b-0"
           >
             <div className="w-20 shrink-0">
-              <p className="font-heading text-sm text-epr-green">{turno.horaInicio}</p>
+              <p className="font-heading text-sm text-epr-green">{formatHora(turno.horaInicio)}</p>
             </div>
             <span className="flex-1 font-heading font-semibold text-foreground">
               {turno.alumno.nombre} {turno.alumno.apellido}

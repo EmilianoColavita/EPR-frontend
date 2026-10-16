@@ -20,6 +20,18 @@ export function formatDateShort(isoDateOrDateTime: string): string {
   return `${String(day).padStart(2, "0")} ${MONTHS_ES_SHORT[month - 1]} ${year}`;
 }
 
+// Hora del backend (HH:mm:ss o HH:mm) a formato de lectura: "15:00 hs".
+export function formatHora(hora: string): string {
+  return `${hora.slice(0, 5)} hs`;
+}
+
+// Rango horario con un solo "hs" al final: "15:00–16:00 hs". Sin fin, igual
+// que formatHora.
+export function formatHorario(inicio: string, fin?: string | null): string {
+  if (!fin) return formatHora(inicio);
+  return `${inicio.slice(0, 5)}–${fin.slice(0, 5)} hs`;
+}
+
 // Días transcurridos desde una fecha ISO hasta hoy (positivo si ya pasó).
 export function diasDesde(isoDate: string): number {
   const fecha = new Date(`${isoDate.slice(0, 10)}T00:00:00`);

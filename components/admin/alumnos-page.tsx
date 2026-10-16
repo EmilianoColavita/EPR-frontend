@@ -12,8 +12,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { NuevoAlumnoModal } from "./nuevo-alumno-modal";
+import { useAdminNotifications } from "./use-admin-notifications";
 
 export function AlumnosPage() {
+  const { marcarSeccionVista } = useAdminNotifications();
   // undefined = cargando, null = no se pudo obtener
   const [alumnos, setAlumnos] = useState<Usuario[] | null | undefined>(
     undefined,
@@ -41,6 +43,8 @@ export function AlumnosPage() {
       setAlumnos((prev) =>
         prev ? prev.map((a) => (a.id === id ? updated : a)) : prev,
       );
+      // Operar sobre un alumno implica que ya se vieron los avisos de la sección.
+      marcarSeccionVista("/panel/admin/alumnos");
     } catch (error) {
       console.error("No se pudo actualizar el estado del alumno:", error);
     } finally {

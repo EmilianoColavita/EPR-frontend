@@ -202,6 +202,14 @@ async function parseApiError(res: Response): Promise<ApiError> {
   );
 }
 
+// Lee el body de una respuesta OK. Algunos endpoints responden 200/204 sin
+// body (ResponseEntity<Void>, ej: notificaciones/mias/leer-todas), y
+// res.json() sobre un body vacío tira "Unexpected end of JSON input".
+async function parseJsonBody<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
 // Helper para POST/PUT públicos (sin JWT) con body JSON, para los pocos
 // endpoints que se llaman antes de tener sesión (ej: reservar una
 // evaluación). Mismo manejo de errores que authMutate.
@@ -230,7 +238,7 @@ async function publicMutate<T>(
     throw await parseApiError(res);
   }
 
-  return (await res.json()) as T;
+  return parseJsonBody<T>(res);
 }
 
 // Helper para POST/PUT/PATCH autenticados con body JSON. A diferencia de
@@ -269,7 +277,7 @@ async function authMutate<T>(
     throw await parseApiError(res);
   }
 
-  return (await res.json()) as T;
+  return parseJsonBody<T>(res);
 }
 
 export async function listUsuarios(
@@ -692,7 +700,7 @@ async function authUpload<T>(
     throw await parseApiError(res);
   }
 
-  return (await res.json()) as T;
+  return parseJsonBody<T>(res);
 }
 
 async function authDelete(path: string, token: string): Promise<void> {

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Check, CheckCircle2, CircleAlert, Copy, Download, Upload } from "lucide-react";
 
 import { useRequireRole } from "@/lib/use-require-role";
+import { Toast } from "@/components/ui/toast";
 import { getSession } from "@/lib/auth";
 import {
   ApiError,
@@ -102,10 +103,11 @@ export function MisPagosPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [planCuotaId, setPlanCuotaId] = useState("");
-  const [monto, setMonto] = useState("");
   const [fecha, setFecha] = useState(todayISO);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [exito, setExito] = useState<string | null>(null);
+  const cerrarExito = useCallback(() => setExito(null), []);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -120,25 +122,27 @@ export function MisPagosPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!archivo) return;
+    if (!archivo || !planSeleccionado) return;
     const session = getSession();
     if (!session) return;
 
     setError(null);
+    setExito(null);
     setUploading(true);
     try {
       const nuevo = await subirComprobante(session.token, {
         archivo,
-        planCuotaId: planCuotaId ? Number(planCuotaId) : undefined,
-        monto: monto ? Number(monto) : undefined,
+        planCuotaId: planSeleccionado.id,
+        // El monto sale del precio del plan, el alumno no lo carga a mano.
+        monto: planSeleccionado.precio ?? undefined,
         fecha,
       });
       setComprobantes((prev) => (prev ? [nuevo, ...prev] : [nuevo]));
       setArchivo(null);
       setPlanCuotaId("");
-      setMonto("");
       setFecha(todayISO());
       if (fileInputRef.current) fileInputRef.current.value = "";
+      setExito("Queda en espera de revisión. Te avisamos cuando se confirme el pago.");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Ocurrió un error inesperado.");
     } finally {
@@ -185,6 +189,7 @@ export function MisPagosPage() {
   }
 
   const planesActivos = (planes ?? []).filter((p) => p.activo);
+  const planSeleccionado = planesActivos.find((p) => String(p.id) === planCuotaId);
   const ordenados = (comprobantes ?? []).slice().sort((a, b) => b.id - a.id);
 
   return (
@@ -278,15 +283,18 @@ export function MisPagosPage() {
               <div className="flex flex-wrap gap-4">
                 <label className="flex flex-1 min-w-[180px] flex-col gap-2">
                   <span className="font-heading text-xs font-light text-foreground/60">
-                    Plan que pagaste (opcional)
+                    Plan a pagar
                   </span>
                   <select
+                    required
                     disabled={uploading}
                     value={planCuotaId}
                     onChange={(e) => setPlanCuotaId(e.target.value)}
                     className={inputClass}
                   >
-                    <option value="">No estoy seguro</option>
+                    <option value="" disabled>
+                      Elegí un plan
+                    </option>
                     {planesActivos.map((plan) => (
                       <option key={plan.id} value={plan.id}>
                         {plan.nombre} ({plan.duracionDias} días)
@@ -309,26 +317,23 @@ export function MisPagosPage() {
                   />
                 </label>
 
-                <label className="flex flex-1 min-w-[140px] flex-col gap-2">
+                <div className="flex flex-1 min-w-[140px] flex-col gap-2">
                   <span className="font-heading text-xs font-light text-foreground/60">
-                    Monto (opcional)
+                    Monto
                   </span>
-                  <input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    disabled={uploading}
-                    value={monto}
-                    onChange={(e) => setMonto(e.target.value)}
-                    className={inputClass}
-                  />
-                </label>
+                  <p
+                    aria-live="polite"
+                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-heading text-base font-semibold text-epr-green"
+                  >
+                    {planSeleccionado ? formatPrecio(planSeleccionado.precio) : "—"}
+                  </p>
+                </div>
               </div>
 
               <Button
                 type="submit"
                 font="heading"
-                disabled={uploading || !archivo}
+                disabled={uploading || !archivo || !planSeleccionado}
                 className="self-start"
               >
                 <Upload className="h-4 w-4" />
@@ -442,6 +447,8 @@ export function MisPagosPage() {
           </DashboardCard>
         </div>
       </section>
+
+      <Toast titulo="Comprobante subido correctamente" mensaje={exito} onClose={cerrarExito} />
     </>
   );
 }

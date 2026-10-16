@@ -15,6 +15,9 @@ import {
 } from "@/lib/site-info";
 import { Logo } from "./logo";
 
+const DESARROLLADOR_NOMBRE = "Emiliano Colavita";
+const DESARROLLADOR_LINKEDIN = "https://www.linkedin.com/in/emiliano-colavita/";
+
 function SocialIcon({
   href,
   label,
@@ -106,6 +109,23 @@ export function Footer() {
               </a>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="border-t border-white/5">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-4 py-5 text-center font-heading text-xs font-light text-foreground/50 sm:flex-row sm:justify-between sm:px-6 sm:text-left lg:px-10">
+          <p>© {new Date().getFullYear()} E.P.R · Todos los derechos reservados</p>
+          <p>
+            Desarrollado por{" "}
+            <a
+              href={DESARROLLADOR_LINKEDIN}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-foreground/70 underline-offset-4 transition-colors hover:text-epr-green hover:underline"
+            >
+              {DESARROLLADOR_NOMBRE}
+            </a>
+          </p>
         </div>
       </div>
     </footer>

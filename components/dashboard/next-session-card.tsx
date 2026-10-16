@@ -6,7 +6,7 @@ import { CalendarClock } from "lucide-react";
 
 import { getSession } from "@/lib/auth";
 import { misTurnos, type Turno } from "@/lib/api";
-import { formatDateShort } from "@/lib/format";
+import { formatDateShort, formatHora } from "@/lib/format";
 import { toDateKey } from "@/lib/calendar";
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardCard, DashboardCardIcon } from "./dashboard-card";
@@ -62,7 +62,7 @@ export function NextSessionCard() {
           <>
             <p className="mt-2 font-heading text-3xl font-bold uppercase tracking-tight text-foreground">
               {turno.fecha === hoyKey ? "Hoy" : formatDateShort(turno.fecha)}{" "}
-              {turno.horaInicio}
+              {formatHora(turno.horaInicio)}
             </p>
             <p className="font-heading font-light text-foreground/70">
               {turno.actividad}

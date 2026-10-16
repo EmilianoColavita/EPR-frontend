@@ -10,11 +10,14 @@ import { clearSession, type Usuario } from "@/lib/auth";
 import { Logo } from "@/components/layout/logo";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ADMIN_NAV_ITEMS } from "./admin-nav-items";
+import { NavBadge } from "./nav-badge";
 import { NotificationsBell } from "./notifications-bell";
+import { useAdminNotifications } from "./use-admin-notifications";
 
 export function AdminHeader({ usuario }: { usuario: Usuario }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { porSeccion } = useAdminNotifications();
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -132,6 +135,7 @@ export function AdminHeader({ usuario }: { usuario: Usuario }) {
                 >
                   <Icon className="h-4 w-4" />
                   {item.label}
+                  <NavBadge count={porSeccion[item.href] ?? 0} className="ml-auto" />
                 </Link>
               );
             })}

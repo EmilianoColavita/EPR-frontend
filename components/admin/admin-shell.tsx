@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useRequireRole } from "@/lib/use-require-role";
 import { AdminHeader } from "./admin-header";
 import { AdminSidebar } from "./admin-sidebar";
+import { AdminNotificationsProvider } from "./use-admin-notifications";
 
 function LoadingState() {
   return (
@@ -24,12 +25,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <>
+    <AdminNotificationsProvider>
       <AdminHeader usuario={usuario} />
       <main className="flex flex-1">
         <AdminSidebar />
         <div className="min-w-0 flex-1 bg-epr-dark">{children}</div>
       </main>
-    </>
+    </AdminNotificationsProvider>
   );
 }

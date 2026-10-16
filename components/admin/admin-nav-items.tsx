@@ -26,3 +26,18 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: "/panel/admin/planes", label: "Plan", icon: Layers },
   { href: "/panel/admin/configuracion", label: "Configuración", icon: HelpCircle },
 ];
+
+const DASHBOARD_HREF = "/panel/admin";
+
+// Devuelve el href del item del menú al que pertenece una ruta, ej:
+// "/panel/admin/alumnos/12/cuenta" -> "/panel/admin/alumnos". El Dashboard
+// solo matchea exacto, si no se comería todas las rutas del panel.
+export function seccionDeHref(href: string): string | null {
+  const path = href.split(/[?#]/)[0];
+  if (path === DASHBOARD_HREF) return DASHBOARD_HREF;
+
+  const item = ADMIN_NAV_ITEMS.find(
+    (i) => i.href !== DASHBOARD_HREF && (path === i.href || path.startsWith(`${i.href}/`)),
+  );
+  return item?.href ?? null;
+}

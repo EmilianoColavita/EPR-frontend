@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { getSession } from "@/lib/auth";
 import { actualizarEstadoTurno, listTurnos, type EstadoTurno, type Turno } from "@/lib/api";
+import { formatHorario } from "@/lib/format";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { cn } from "@/lib/utils";
 
@@ -129,8 +130,7 @@ export function TurnosPage() {
                 className="flex flex-wrap items-center gap-4 rounded-xl border border-white/10 p-4"
               >
                 <span className="w-24 shrink-0 font-heading text-epr-green">
-                  {turno.horaInicio}
-                  {turno.horaFin && `–${turno.horaFin}`}
+                  {formatHorario(turno.horaInicio, turno.horaFin)}
                 </span>
                 <div className="min-w-[160px] flex-1">
                   <p className="font-heading font-semibold text-foreground">

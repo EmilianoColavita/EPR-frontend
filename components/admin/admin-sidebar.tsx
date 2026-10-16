@@ -5,9 +5,12 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV_ITEMS } from "./admin-nav-items";
+import { NavBadge } from "./nav-badge";
+import { useAdminNotifications } from "./use-admin-notifications";
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const { porSeccion } = useAdminNotifications();
 
   return (
     <aside className="hidden w-64 shrink-0 border-r border-white/10 bg-epr-dark px-4 py-8 lg:block">
@@ -28,13 +31,17 @@ export function AdminSidebar() {
             >
               <span
                 className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border",
+                  "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border",
                   isActive
                     ? "border-epr-green text-epr-green"
                     : "border-white/15 text-epr-green/80",
                 )}
               >
                 <Icon className="h-4 w-4" />
+                <NavBadge
+                  count={porSeccion[item.href] ?? 0}
+                  className="absolute -right-2 -top-2"
+                />
               </span>
               <span className="font-display text-sm uppercase tracking-wider">
                 {item.label}

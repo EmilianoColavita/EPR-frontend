@@ -26,6 +26,7 @@ import { diasDesde, esVencido, formatDateShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DashboardCard, DashboardCardIcon } from "@/components/dashboard/dashboard-card";
+import { useAdminNotifications } from "./use-admin-notifications";
 
 const inputClass =
   "w-full rounded-xl border border-white/15 bg-epr-dark px-4 py-3 font-sans text-foreground outline-none transition-colors focus:border-epr-green disabled:opacity-50";
@@ -43,6 +44,7 @@ function formatPrecio(precio: number | null): string {
 }
 
 export function AlumnoCuentaPage({ alumnoId }: { alumnoId: number }) {
+  const { refetch: refetchNotificaciones } = useAdminNotifications();
   const [alumno, setAlumno] = useState<Usuario | null | undefined>(undefined);
   const [cuenta, setCuenta] = useState<CuentaAlumno | null | undefined>(undefined);
   const [pagos, setPagos] = useState<Pago[] | null | undefined>(undefined);
@@ -76,6 +78,8 @@ export function AlumnoCuentaPage({ alumnoId }: { alumnoId: number }) {
   }, [alumnoId]);
 
   function handleComprobanteResuelto(pago: Pago | null, actualizado: ComprobantePago) {
+    // Que la campanita y el globito de Alumnos bajen al instante.
+    refetchNotificaciones();
     setComprobantes((prev) =>
       prev ? prev.map((c) => (c.id === actualizado.id ? actualizado : c)) : prev,
     );
@@ -161,7 +165,10 @@ export function AlumnoCuentaPage({ alumnoId }: { alumnoId: number }) {
     !becado && cuenta != null && !cuenta.alDia && esVencido(cuenta.fechaVencimiento);
   const planesActivos = (planes ?? []).filter((p) => p.activo);
   const pagosOrdenados = (pagos ?? []).slice().sort((a, b) => b.id - a.id);
-  const pendiente = (comprobantes ?? []).find((c) => c.estado === "PENDIENTE");
+  // Todos los pendientes, del más viejo al más nuevo (orden de llegada).
+  const pendientes = (comprobantes ?? [])
+    .filter((c) => c.estado === "PENDIENTE")
+    .sort((a, b) => a.id - b.id);
   const rechazados = (comprobantes ?? [])
     .filter((c) => c.estado === "RECHAZADO")
     .sort((a, b) => b.id - a.id);
@@ -245,14 +252,20 @@ export function AlumnoCuentaPage({ alumnoId }: { alumnoId: number }) {
         </DashboardCard>
       )}
 
-      {!becado && pendiente && (
-        <ComprobantePendienteCard
-          alumnoId={alumnoId}
-          comprobante={pendiente}
-          planesActivos={planesActivos}
-          onResuelto={handleComprobanteResuelto}
-        />
-      )}
+      {/* key por comprobante: cada tarjeta tiene su propio estado (saving,
+          rechazo, form). Sin key, al resolver uno React reusaba la tarjeta
+          para el siguiente y quedaba trabada en "Guardando...". */}
+      {!becado &&
+        pendientes.map((comprobante, index) => (
+          <ComprobantePendienteCard
+            key={comprobante.id}
+            alumnoId={alumnoId}
+            comprobante={comprobante}
+            planesActivos={planesActivos}
+            onResuelto={handleComprobanteResuelto}
+            posicion={pendientes.length > 1 ? `${index + 1} de ${pendientes.length}` : null}
+          />
+        ))}
 
       {!becado && (
       <>
@@ -430,11 +443,14 @@ function ComprobantePendienteCard({
   comprobante,
   planesActivos,
   onResuelto,
+  posicion,
 }: {
   alumnoId: number;
   comprobante: ComprobantePago;
   planesActivos: PlanCuota[];
   onResuelto: (pago: Pago | null, comprobanteActualizado: ComprobantePago) => void;
+  // "1 de 3" cuando hay varios pendientes; null si es el único.
+  posicion: string | null;
 }) {
   const [planCuotaId, setPlanCuotaId] = useState(
     comprobante.planCuota && planesActivos.some((p) => p.id === comprobante.planCuota!.id)
@@ -508,6 +524,11 @@ function ComprobantePendienteCard({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="font-heading text-lg font-bold uppercase tracking-tight text-yellow-400">
           Comprobante pendiente de revisión
+          {posicion && (
+            <span className="ml-2 font-heading text-sm font-light normal-case text-yellow-400/70">
+              ({posicion})
+            </span>
+          )}
         </h2>
         <button
           type="button"
