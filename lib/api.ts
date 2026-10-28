@@ -500,7 +500,7 @@ export async function seleccionarDia(
 
 // --- Turnos ---
 
-export type EstadoTurno = "CONFIRMADO" | "CANCELADO" | "COMPLETADO";
+export type EstadoTurno = "CONFIRMADO" | "CANCELADO" | "COMPLETADO" | "AUSENTE";
 
 export type Turno = {
   id: number;
@@ -567,6 +567,17 @@ export async function misTurnos(
   if (filtros?.hasta) params.set("hasta", filtros.hasta);
   const query = params.toString() ? `?${params.toString()}` : "";
   return authGet<Turno[]>(`/api/v1/turnos/mios${query}`, token);
+}
+
+// El alumno marca él mismo que asistió a un turno suyo que ya empezó;
+// el backend lo pasa a COMPLETADO sin que el admin tenga que confirmarlo.
+export async function marcarMiAsistencia(token: string, id: number): Promise<Turno> {
+  return authMutate<Turno>(`/api/v1/turnos/mios/${id}/asistencia`, "PATCH", token, {});
+}
+
+// Igual que la asistencia, pero el alumno avisa que no fue: queda AUSENTE.
+export async function marcarMiAusencia(token: string, id: number): Promise<Turno> {
+  return authMutate<Turno>(`/api/v1/turnos/mios/${id}/ausencia`, "PATCH", token, {});
 }
 
 // --- Horario asignado (turno fijo semanal) ---

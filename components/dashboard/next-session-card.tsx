@@ -2,18 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, CheckCircle2 } from "lucide-react";
 
 import { getSession } from "@/lib/auth";
-import { misTurnos, type Turno } from "@/lib/api";
+import { ApiError, marcarMiAsistencia, misTurnos, type Turno } from "@/lib/api";
 import { formatDateShort, formatHora } from "@/lib/format";
 import { toDateKey } from "@/lib/calendar";
-import { buttonVariants } from "@/components/ui/button";
+import { avisarTurnosActualizados, puedeMarcarAsistencia } from "@/lib/turnos";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { DashboardCard, DashboardCardIcon } from "./dashboard-card";
 
 export function NextSessionCard() {
   // undefined = cargando, null = no se pudo obtener o no hay ninguno
   const [turno, setTurno] = useState<Turno | null | undefined>(undefined);
+  const [ahora, setAhora] = useState(() => new Date());
+  const [marcando, setMarcando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const session = getSession();
@@ -33,7 +37,31 @@ export function NextSessionCard() {
     });
   }, []);
 
-  const hoyKey = toDateKey(new Date());
+  // Refresca la hora cada minuto para que el botón aparezca apenas empieza
+  // el turno, sin tener que recargar la página.
+  useEffect(() => {
+    const id = setInterval(() => setAhora(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  async function handleAsistencia() {
+    const session = getSession();
+    if (!session || !turno) return;
+
+    setError(null);
+    setMarcando(true);
+    try {
+      setTurno(await marcarMiAsistencia(session.token, turno.id));
+      avisarTurnosActualizados();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Ocurrió un error inesperado.");
+    } finally {
+      setMarcando(false);
+    }
+  }
+
+  const hoyKey = toDateKey(ahora);
+  const enCurso = turno ? puedeMarcarAsistencia(turno, ahora) : false;
 
   return (
     <DashboardCard className="flex items-start gap-5">
@@ -41,9 +69,9 @@ export function NextSessionCard() {
         <CalendarClock className="h-6 w-6" />
       </DashboardCardIcon>
 
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <p className="font-heading text-sm uppercase tracking-widest text-foreground/60">
-          Próximo turno
+          {enCurso ? "Turno de hoy" : "Próximo turno"}
         </p>
 
         {turno === undefined && (
@@ -70,17 +98,41 @@ export function NextSessionCard() {
           </>
         )}
 
-        <Link
-          href="/panel/alumno/turnos"
-          className={buttonVariants({
-            variant: "outline",
-            size: "sm",
-            font: "heading",
-            className: "mt-4",
-          })}
-        >
-          Ver mis turnos
-        </Link>
+        {turno?.estado === "COMPLETADO" && (
+          <p className="mt-4 flex items-center gap-2 font-heading text-sm font-semibold text-epr-green">
+            <CheckCircle2 className="h-5 w-5 shrink-0" />
+            ¡Asistencia registrada!
+          </p>
+        )}
+
+        {error && (
+          <p className="mt-3 font-heading text-sm font-light text-red-400">{error}</p>
+        )}
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {enCurso && (
+            <Button
+              type="button"
+              size="sm"
+              font="heading"
+              disabled={marcando}
+              onClick={handleAsistencia}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              {marcando ? "Marcando..." : "Asistí"}
+            </Button>
+          )}
+          <Link
+            href="/panel/alumno/turnos"
+            className={buttonVariants({
+              variant: "outline",
+              size: "sm",
+              font: "heading",
+            })}
+          >
+            Ver mis turnos
+          </Link>
+        </div>
       </div>
     </DashboardCard>
   );

@@ -280,8 +280,8 @@ export function MisPagosPage() {
                 />
               </label>
 
-              <div className="flex flex-wrap gap-4">
-                <label className="flex flex-1 min-w-[180px] flex-col gap-2">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                <label className="col-span-2 flex min-w-0 flex-col gap-2 sm:col-span-1">
                   <span className="font-heading text-xs font-light text-foreground/60">
                     Plan a pagar
                   </span>
@@ -303,27 +303,32 @@ export function MisPagosPage() {
                   </select>
                 </label>
 
-                <label className="flex flex-1 min-w-[160px] flex-col gap-2">
+                <label className="flex min-w-0 flex-col gap-2">
                   <span className="font-heading text-xs font-light text-foreground/60">
                     Fecha del pago
                   </span>
+                  {/* El input date nativo (sobre todo en iOS) trae su propio alto
+                      y padding; lo fijamos para que mida igual que el monto. */}
                   <input
                     type="date"
                     required
                     disabled={uploading}
                     value={fecha}
                     onChange={(e) => setFecha(e.target.value)}
-                    className={inputClass}
+                    className={cn(
+                      inputClass,
+                      "h-12 min-w-0 appearance-none px-3 py-0 text-sm sm:px-4 sm:text-base [&::-webkit-date-and-time-value]:text-left",
+                    )}
                   />
                 </label>
 
-                <div className="flex flex-1 min-w-[140px] flex-col gap-2">
+                <div className="flex min-w-0 flex-col gap-2">
                   <span className="font-heading text-xs font-light text-foreground/60">
                     Monto
                   </span>
                   <p
                     aria-live="polite"
-                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-heading text-base font-semibold text-epr-green"
+                    className="h-12 truncate rounded-xl leading-[46px] border border-white/10 bg-white/5 px-3 font-heading text-sm font-semibold text-epr-green sm:px-4 sm:text-base"
                   >
                     {planSeleccionado ? formatPrecio(planSeleccionado.precio) : "—"}
                   </p>

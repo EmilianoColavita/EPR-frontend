@@ -5,6 +5,7 @@ import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { getSession } from "@/lib/auth";
 import { misTurnos, type Turno } from "@/lib/api";
+import { TURNOS_ACTUALIZADOS_EVENT } from "@/lib/turnos";
 import { cn } from "@/lib/utils";
 import {
   buildMonthGrid,
@@ -15,7 +16,7 @@ import {
 import { DashboardCard } from "./dashboard-card";
 import { AttendanceRing } from "./attendance-ring";
 
-type AttendanceStatus = "completed" | "pending";
+type AttendanceStatus = "completed" | "pending" | "missed";
 
 function firstOfMonthISO(year: number, month: number): string {
   return toDateKey(new Date(year, month, 1));
@@ -38,17 +39,36 @@ export function CalendarCard() {
   useEffect(() => {
     const session = getSession();
     if (!session) return;
-    misTurnos(session.token, {
-      desde: firstOfMonthISO(year, month),
-      hasta: lastOfMonthISO(year, month),
-    }).then(setTurnos);
+    const cargar = () =>
+      misTurnos(session.token, {
+        desde: firstOfMonthISO(year, month),
+        hasta: lastOfMonthISO(year, month),
+      }).then(setTurnos);
+
+    cargar();
+    // Si el alumno marca su asistencia desde otra tarjeta, recargamos para
+    // que el calendario y el porcentaje queden al día.
+    window.addEventListener(TURNOS_ACTUALIZADOS_EVENT, cargar);
+    return () => window.removeEventListener(TURNOS_ACTUALIZADOS_EVENT, cargar);
   }, [year, month]);
 
   const attendance = useMemo(() => {
+    // Si hay varios turnos el mismo día, gana el de mayor prioridad.
+    const prioridad: Record<AttendanceStatus, number> = { completed: 3, missed: 2, pending: 1 };
     const map: Record<string, AttendanceStatus> = {};
     for (const turno of turnos ?? []) {
-      if (turno.estado === "COMPLETADO") map[turno.fecha] = "completed";
-      else if (turno.estado === "CONFIRMADO") map[turno.fecha] = "pending";
+      const status: AttendanceStatus | null =
+        turno.estado === "COMPLETADO"
+          ? "completed"
+          : turno.estado === "AUSENTE"
+            ? "missed"
+            : turno.estado === "CONFIRMADO"
+              ? "pending"
+              : null;
+      const actual = map[turno.fecha];
+      if (status && (!actual || prioridad[status] > prioridad[actual])) {
+        map[turno.fecha] = status;
+      }
     }
     return map;
   }, [turnos]);
@@ -157,6 +177,8 @@ export function CalendarCard() {
                           "border border-epr-green bg-epr-green/20 text-epr-green",
                         status === "pending" &&
                           "border border-epr-green/60 text-epr-green",
+                        status === "missed" &&
+                          "border border-red-500/60 text-red-400",
                       )}
                     >
                       {cell.day}
@@ -182,6 +204,12 @@ export function CalendarCard() {
           <span className="h-4 w-4 rounded-full border border-epr-green/60" />
           <span className="font-heading text-xs font-light text-foreground/60">
             Entrenamiento pendiente
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-4 w-4 rounded-full border border-red-500/60" />
+          <span className="font-heading text-xs font-light text-foreground/60">
+            No asististe
           </span>
         </div>
         <div className="flex items-center gap-2">

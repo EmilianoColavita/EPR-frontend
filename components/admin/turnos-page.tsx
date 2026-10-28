@@ -13,6 +13,7 @@ const ESTADO_LABEL: Record<EstadoTurno, string> = {
   CONFIRMADO: "Confirmado",
   CANCELADO: "Cancelado",
   COMPLETADO: "Completado",
+  AUSENTE: "Ausente",
 };
 
 function todayISO(): string {
@@ -146,6 +147,7 @@ export function TurnosPage() {
                     turno.estado === "CONFIRMADO" && "border-epr-green/50 text-epr-green",
                     turno.estado === "CANCELADO" && "border-red-500/40 text-red-400",
                     turno.estado === "COMPLETADO" && "border-white/20 text-foreground/50",
+                    turno.estado === "AUSENTE" && "border-orange-500/40 text-orange-400",
                   )}
                 >
                   {ESTADO_LABEL[turno.estado]}
@@ -159,6 +161,14 @@ export function TurnosPage() {
                       className="font-heading text-sm text-foreground/70 transition-colors hover:text-foreground disabled:opacity-50"
                     >
                       Marcar hecho
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updatingId === turno.id}
+                      onClick={() => handleEstado(turno.id, "AUSENTE")}
+                      className="font-heading text-sm text-orange-400 hover:underline disabled:opacity-50"
+                    >
+                      Ausente
                     </button>
                     <button
                       type="button"

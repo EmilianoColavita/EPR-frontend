@@ -2,11 +2,12 @@
 
 import {
   ArrowRight,
+  BadgeCheck,
   ClipboardList,
   History,
   Mail,
+  Paperclip,
   PersonStanding,
-  Star,
   Target,
   Trophy,
   UserPlus,
@@ -16,23 +17,52 @@ import { motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
 import { fadeUp, staggerContainer } from "@/lib/motion";
-import { EMAIL } from "@/lib/site-info";
+import { EMAIL, mailtoHref } from "@/lib/site-info";
 import { buttonVariants } from "@/components/ui/button";
 
+const ASUNTO_POSTULACION = "Postulación BECA FUERZA - [Tu nombre y apellido]";
+
 const REQUISITOS = [
-  "Asistir regularmente a los entrenamientos.",
-  "Respetar las normas de convivencia y las pautas establecidas por los profesionales.",
-  "Mantener una conducta acorde con los valores del proyecto.",
+  {
+    titulo: "Estar federado",
+    descripcion:
+      "Contar con acreditación, carnet o licencia vigente de tu federación o asociación deportiva.",
+  },
+  {
+    titulo: "Compromiso y asistencia",
+    descripcion:
+      "Asistir regularmente a los entrenamientos de fuerza programados en el centro.",
+  },
+  {
+    titulo: "Respeto y valores",
+    descripcion:
+      "Mantener una conducta acorde a las normas de convivencia del proyecto E.P.R.",
+  },
+  {
+    titulo: "Foco del programa",
+    descripcion:
+      "La beca está pensada exclusivamente para quienes hoy no pueden afrontar el gasto mensual de un centro de entrenamiento de alto rendimiento.",
+  },
+];
+
+const DATOS_MAIL = [
+  "Tu edad actual.",
+  "Qué deporte hacés, en qué club y en qué categoría competís.",
+  "Por qué te vendría bien recibir esta beca.",
 ];
 
 const VALORES = [
+  {
+    icon: BadgeCheck,
+    label: "Federado",
+    caption: "Con licencia deportiva vigente.",
+  },
   {
     icon: PersonStanding,
     label: "Compromiso",
     caption: "Con tu entrenamiento y tus objetivos.",
   },
   { icon: Users, label: "Respeto", caption: "Por las normas y la convivencia." },
-  { icon: Star, label: "Valores", caption: "Del proyecto E.P.R." },
 ];
 
 export function Becas() {
@@ -68,8 +98,9 @@ export function Becas() {
             variants={fadeUp}
           >
             En E.P.R. creemos en el potencial de quienes entrenan con
-            compromiso, por eso ofrecemos becas deportivas para aquellos que
-            buscan crecer en el ámbito deportivo.
+            compromiso, por eso ofrecemos becas de entrenamiento personalizados para
+            deportistas federados que compiten a nivel nacional e
+            internacional.
           </motion.p>
 
           <motion.a
@@ -103,9 +134,13 @@ export function Becas() {
               ¿Quiénes pueden postularse?
             </h2>
             <p className="mt-3 font-heading font-light text-foreground/70">
-              El programa está dirigido a personas comprometidas con su
-              entrenamiento y que quieran crecer en el ámbito deportivo, sin
-              importar su nivel actual.
+              El programa está dirigido a{" "}
+              <span className="font-semibold text-epr-green">
+                deportistas federados
+              </span>
+              , es decir, habilitados para competir a nivel nacional e
+              internacional, comprometidos con su entrenamiento y que hoy no
+              pueden afrontar el costo de un centro de alto rendimiento.
             </p>
 
             <div className="mt-8 grid grid-cols-3 gap-4 border-t border-white/10 pt-6">
@@ -139,13 +174,18 @@ export function Becas() {
 
             <ul className="mt-4 flex flex-col gap-3">
               {REQUISITOS.map((req, index) => (
-                <li key={req} className="flex items-start gap-3">
+                <li key={req.titulo} className="flex items-start gap-3">
                   <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-epr-green font-heading text-xs font-bold text-epr-dark">
                     {index + 1}
                   </span>
-                  <span className="font-heading font-light text-foreground/80">
-                    {req}
-                  </span>
+                  <div>
+                    <p className="font-heading text-sm font-bold uppercase text-foreground">
+                      {req.titulo}
+                    </p>
+                    <p className="mt-0.5 font-heading font-light text-foreground/70">
+                      {req.descripcion}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -190,17 +230,54 @@ export function Becas() {
               </p>
 
               <a
-                href={`mailto:${EMAIL}`}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-epr-green px-5 py-3 font-heading text-sm font-semibold text-epr-dark transition-colors hover:bg-epr-green/90"
+                href={mailtoHref(ASUNTO_POSTULACION)}
+                className="mt-4 inline-flex max-w-full items-center gap-2 break-all rounded-full bg-epr-green px-5 py-3 font-heading text-sm font-semibold text-epr-dark transition-colors hover:bg-epr-green/90"
               >
                 {EMAIL}
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4 shrink-0" />
               </a>
 
-              <p className="mt-4 font-heading font-light text-foreground/70">
-                Contanos tu situación deportiva y por qué te gustaría formar
-                parte de E.P.R.
-              </p>
+              <div className="mt-6 flex flex-col gap-4 border-t border-white/10 pt-6">
+                <p className="font-heading text-sm font-bold uppercase text-foreground">
+                  En el mail debés incluir:
+                </p>
+
+                <div>
+                  <p className="font-heading text-xs font-bold uppercase tracking-wide text-epr-green">
+                    Asunto
+                  </p>
+                  <p className="mt-1 rounded-lg bg-epr-dark/60 px-3 py-2 font-heading text-sm text-foreground/90">
+                    {ASUNTO_POSTULACION}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="flex items-center gap-1.5 font-heading text-xs font-bold uppercase tracking-wide text-epr-green">
+                    <Paperclip className="h-3.5 w-3.5" />
+                    Adjunto
+                  </p>
+                  <p className="mt-1 font-heading font-light text-foreground/80">
+                    Foto nítida de tu carnet o acreditación federativa vigente.
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-heading text-xs font-bold uppercase tracking-wide text-epr-green">
+                    En el cuerpo del mensaje contanos
+                  </p>
+                  <ul className="mt-2 flex flex-col gap-1.5">
+                    {DATOS_MAIL.map((dato) => (
+                      <li
+                        key={dato}
+                        className="flex items-start gap-2 font-heading font-light text-foreground/80"
+                      >
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-epr-green" />
+                        {dato}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
           </motion.div>
         </motion.div>
